@@ -1,8 +1,8 @@
 {
-  "name": "JeecgBoot-uniapp3",
+  "name": "JeecgUniapp3",
   "type": "commonjs",
-  "version": "2.6.1",
-  "description": "uniapp",
+  "version": "3.0.0",
+  "description": "JeecgBoot配套APP框架",
   "engines": {
     "node": ">=18",
     "pnpm": ">=7.30"
