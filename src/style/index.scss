@@ -1,0 +1,36 @@
+// @import './iconfont.css';
+@import '../static/iconfont/iconfont.css';
+@import './chat/style.scss';
+.test {
+  // 可以通过 @apply 多个样式封装整体样式
+  @apply mt-4 ml-4;
+
+  padding-top: 4px;
+  color: red;
+}
+
+:root,
+page {
+  // 修改按主题色
+  // --wot-color-theme: #37c2bc;
+
+  // 修改按钮背景色
+  // --wot-button-primary-bg-color: green;
+  background-color: #f1f1f1;
+  --wot-navbar-color: #fff;
+  --wot-navbar-desc-font-color: #fff;
+  // 重置wot-design-uni
+  .wd-button.is-round {
+    border-radius: 6px !important;
+  }
+  .wd-cell__left {
+    align-items: center;
+  }
+  .wd-popup {
+    &.wd-popup--right,
+    &.wd-popup--left {
+      top: 44px;
+      height: calc(100vh - 44px);
+    }
+  }
+}
