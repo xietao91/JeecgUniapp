@@ -1,7 +1,7 @@
-# JeecgUniapp项目介绍
+# 项目介绍
 
-JeecgUniapp 前端采用 [uniapp](https://uniapp.dcloud.net.cn/)、Vue3.0、Vite、 Wot-design-uni、TypeScript 等新技术方案，包括二次封装组件、路由拦截、请求拦截等功能。实现了与 `JeecgBoot` 完美对接:
-目前已经实现登录、用户信息、通讯录、公告、移动首页、九宫格、聊天等功能，提供了丰富的组件!
+JeecgUniapp 是`JeecgBoot低代码平台`的配套`APP移动框架`，项目采用 Uniapp、Vue3.0、Vite、 Wot-design-uni、TypeScript 等新技术栈，包括二次封装组件、路由拦截、请求拦截等功能。实现了与 `JeecgBoot` 完美对接:
+目前已经实现登录、用户信息、通讯录、公告、移动首页、九宫格、聊天、Online表单、仪表盘等功能，提供了丰富的组件!
 
 当前最新版本： 3.0.0（发布日期：2025-03-17）
 
@@ -17,7 +17,7 @@ JeecgUniapp 前端采用 [uniapp](https://uniapp.dcloud.net.cn/)、Vue3.0、Vite
 ### 新版特点
 - 一份代码多终端适配，小程序、H5、安卓、ios、鸿蒙Next
 - 学习成本低、组件丰富、兼容性好、支持iframe嵌入
-- 新版APP具备低代码设计能力，包括表单设计、仪表盘设计等
+- 新版APP具备低代码能力，包括表单设计、仪表盘设计等
 
 
 ### 前端技术栈
@@ -32,7 +32,7 @@ JeecgUniapp 前端采用 [uniapp](https://uniapp.dcloud.net.cn/)、Vue3.0、Vite
 
 
 
-### 后台源码下载
+### 后台源码
 
 - https://github.com/jeecgboot/jeecg-boot
 
@@ -48,7 +48,7 @@ JeecgUniapp 前端采用 [uniapp](https://uniapp.dcloud.net.cn/)、Vue3.0、Vite
 
 > 配置文件：`env/.env.development`
 
-请把 http://localhost:8080/jeecg-boot 的两个地方替换成自己地址，其他不用改。
+请把 http://localhost:8080/jeecg-boot 替换成自己地址，其他不用改。
 
 ```javascript
 //  变量必须以 VITE_ 为前缀才能暴露给外部读取
@@ -63,11 +63,13 @@ VITE_SERVER_BASEURL = 'http://localhost:8080/jeecg-boot';
 
 #### 启动项目
 
-执行 `pnpm i` 安装依赖
+执行命令安装依赖
+```
+ pnpm i
+```
+运行启动命令，运行 `H5`
 
-运行下面命令，运行 `H5`
-
-```javascript
+```
  pnpm run dev
 ```
 
