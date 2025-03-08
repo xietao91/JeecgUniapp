@@ -2,7 +2,7 @@
   "name": "JeecgUniapp3",
   "type": "commonjs",
   "version": "3.0.0",
-  "description": "JeecgBoot配套APP框架",
+  "description": "JeecgBoot配套APP移动框架，一份代码多终端适配，支持小程序、H5、APP、ios、安卓、鸿蒙",
   "engines": {
     "node": ">=18",
     "pnpm": ">=7.30"
