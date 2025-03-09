@@ -41,6 +41,7 @@ JeecgUniapp 是`JeecgBoot低代码平台`的配套`APP移动框架`，项目采�
 - 产品官网： [http://jeecg.com/appIndex](http://jeecg.com/appIndex)
 - 开发文档： [https://help.jeecg.com/uniapp3](https://help.jeecg.com/uniapp3)
 - 官方支持： 遇到BUG可以在github上 [发Issue](https://github.com/jeecgboot/jeecg-uniapp/issues/new)
+- QQ交流群： 716488839
 
 ### 快速启动
 
