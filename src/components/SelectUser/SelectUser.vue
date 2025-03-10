@@ -2,7 +2,7 @@
   <view class="SelectUser">
     <view @click.stop="handleClick">
       <wd-input
-        :placeholder="`请选择${$attrs.label}`"
+        :placeholder="getPlaceholder($attrs)"
         v-bind="$attrs"
         readonly
         v-model="showText"
@@ -27,11 +27,12 @@ import { http } from '@/utils/http'
 import DaTree from '@/uni_modules/da-tree/index.vue'
 import { isArray, isString } from '@/utils/is'
 import SelectUserModal from './components/SelectUserModal.vue'
+import { getPlaceholder } from '@/common/uitls'
 defineOptions({
   name: 'SelectUser',
   options: {
-    styleIsolation: 'shared'
-  }
+    styleIsolation: 'shared',
+  },
 })
 const props = defineProps({
   modelValue: {
@@ -52,7 +53,7 @@ const props = defineProps({
   },
   modalTitle: {
     type: String,
-    default: '',
+    default: '选择用户',
   },
   maxSelectCount: {
     type: Number,
@@ -103,6 +104,7 @@ const handleChange = (data) => {
   emit('update:modelValue', rowkey)
   emit('change', rowkey)
 }
+
 watch(
   () => props.modelValue,
   () => {

@@ -76,6 +76,7 @@ export default function useChartHook(props, initOption?, echarts?) {
       if (config.dataSetId && config.dataSetType == 'api' && config.dataSetIzAgent !== '1') {
         //不走代理直接请求接口  url参数处理
         let { url, dataMap } = handleParam(config)
+        //TODO 联动钻取处理
         let linkParams = {}
         queryParams = Object.assign({}, dataMap, queryParams, linkParams)
         if (url.startsWith('#{api_base_path}') || url.startsWith('{{ domainURL }}')) {
@@ -96,6 +97,14 @@ export default function useChartHook(props, initOption?, echarts?) {
             getDataCallBack()
           })
         }
+      }else if (config.dataSetType == 'websocket'){
+
+      }else {
+        let { dataMap } = handleParam(config)
+        //TODO 联动钻取处理
+        let linkParams = {}
+        queryParams = Object.assign({}, dataMap, queryParams, linkParams)
+        getAgentData(queryParams,config);
       }
     } else if (config.dataType == 4) {
       //查询配置

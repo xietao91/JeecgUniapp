@@ -24,6 +24,7 @@
     <view class="pageContent">
       <slot></slot>
     </view>
+    <view class="tabbar"></view>
     <wd-toast></wd-toast>
     <wd-message-box></wd-message-box>
     <wd-notify></wd-notify>
@@ -170,9 +171,10 @@ console.log('props:', props)
     }
     :deep(.wd-navbar) {
       background-color: transparent;
+      --wot-navbar-title-font-weight: 400;
       --wot-navbar-arrow-size: 18px;
       --wot-navbar-desc-font-size: 14px;
-      --wot-navbar-title-font-size: 14px;
+      --wot-navbar-title-font-size: 16px;
     }
   }
   .pageContent {
@@ -181,6 +183,11 @@ console.log('props:', props)
     display: flex;
     flex-direction: column;
     background-color: #f1f1f1;
+  }
+  .tabbar {
+    /* #ifdef H5 */
+	 height: var(--window-bottom);
+    /* #endif */
   }
 }
 </style>

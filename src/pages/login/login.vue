@@ -8,75 +8,77 @@
 </route>
 
 <template>
-  <view class="page-container">
-    <view class="text-center">
-      <image :src="compLogo" mode="aspectFit" class="logo"></image>
-      <view class="title text-shadow">{{ compTitle || 'JEECG BOOT' }}</view>
-      <view class="enter-area">
-        <view v-if="loginWay == 1" class="account-login-area">
-          <view class="box account">
-            <wd-icon name="user" size="15px"></wd-icon>
-            <wd-text text="账号：" color="#000"></wd-text>
-            <wd-input placeholder="请输入账号" v-model.trim="userName"></wd-input>
-          </view>
-          <view class="box password">
-            <wd-icon name="lock-on" size="15px"></wd-icon>
-            <wd-text text="密码：" color="#000"></wd-text>
-            <input
-              class="uni-input"
-              placeholder="请输入密码"
-              :password="showPassword"
-              v-model.trim="password"
-            />
-            <wd-icon
-              v-if="showPassword"
-              name="eye-close"
-              size="18px"
-              @click="handleChangePassword"
-            ></wd-icon>
-            <wd-icon v-else name="view" size="18px" @click="handleChangePassword"></wd-icon>
-          </view>
-        </view>
-        <view v-else class="phone-login-area">
-          <view class="account-login-area">
+  <PageLayout :navbarShow="false">
+    <view class="page-container">
+      <view class="text-center">
+        <image :src="compLogo" mode="aspectFit" class="logo"></image>
+        <view class="title text-shadow">{{ compTitle || 'JEECG BOOT' }}</view>
+        <view class="enter-area">
+          <view v-if="loginWay == 1" class="account-login-area">
             <view class="box account">
-              <wd-icon name="mobile" size="15px"></wd-icon>
-              <wd-text text="手机号：" color="#000"></wd-text>
-              <wd-input placeholder="请输入手机号" v-model="phoneNo"></wd-input>
+              <wd-icon name="user" size="15px"></wd-icon>
+              <wd-text text="账号："></wd-text>
+              <wd-input placeholder="请输入账号" v-model.trim="userName"></wd-input>
             </view>
             <view class="box password">
               <wd-icon name="lock-on" size="15px"></wd-icon>
-              <wd-text text="验证码：" color="#000"></wd-text>
-              <wd-input placeholder="请输入验证码" v-model="smsCode"></wd-input>
-              <wd-button
-                :round="false"
-                size="small"
-                custom-class="sendSMSBtn"
-                plain
-                hairline
-                :disabled="isSendSMSEnable"
-                @click="handleSMSSend"
-              >
-                {{ getSendBtnText }}
-              </wd-button>
+              <wd-text text="密码："></wd-text>
+              <input
+                class="uni-input"
+                placeholder="请输入密码"
+                :password="showPassword"
+                v-model.trim="password"
+              />
+              <wd-icon
+                v-if="showPassword"
+                name="eye-close"
+                size="18px"
+                @click="handleChangePassword"
+              ></wd-icon>
+              <wd-icon v-else name="view" size="18px" @click="handleChangePassword"></wd-icon>
+            </view>
+          </view>
+          <view v-else class="phone-login-area">
+            <view class="account-login-area">
+              <view class="box account">
+                <wd-icon name="mobile" size="15px"></wd-icon>
+                <wd-text text="手机号：" color="#000"></wd-text>
+                <wd-input placeholder="请输入手机号" v-model="phoneNo"></wd-input>
+              </view>
+              <view class="box password">
+                <wd-icon name="lock-on" size="15px"></wd-icon>
+                <wd-text text="验证码：" color="#000"></wd-text>
+                <wd-input placeholder="请输入验证码" v-model="smsCode"></wd-input>
+                <wd-button
+                  :round="false"
+                  size="small"
+                  custom-class="sendSMSBtn"
+                  plain
+                  hairline
+                  :disabled="isSendSMSEnable"
+                  @click="handleSMSSend"
+                >
+                  {{ getSendBtnText }}
+                </wd-button>
+              </view>
             </view>
           </view>
         </view>
+        <view class="btn-area text-center">
+          <wd-button custom-class="mr-30px align-top" :loading="loading" @click="hanldeLogin">
+            {{ loading ? '登录...' : '登录' }}
+          </wd-button>
+          <wd-button v-if="loginWay == 2" plain hairline @click="toggleLoginWay(1)">
+            账户登录
+          </wd-button>
+          <wd-button v-else custom-class="align-top" plain hairline @click="toggleLoginWay(2)">
+            短信登录
+          </wd-button>
+        </view>
       </view>
-      <view class="btn-area text-center">
-        <wd-button custom-class="mr-5 align-top" :loading="loading" @click="hanldeLogin">
-          {{ loading ? '登录...' : '登录' }}
-        </wd-button>
-        <wd-button v-if="loginWay == 2" plain hairline @click="toggleLoginWay(1)">
-          账户登录
-        </wd-button>
-        <wd-button v-else custom-class="align-top" plain hairline @click="toggleLoginWay(2)">
-          短信登录
-        </wd-button>
-      </view>
+      <wd-notify />
     </view>
-    <wd-notify />
-  </view>
+  </PageLayout>
 </template>
 
 <script lang="ts" setup>
@@ -90,7 +92,8 @@ import {
   USER_INFO,
   APP_ROUTE,
   APP_CONFIG,
-  HOME_CONFIG_EXPIRED_TIME, HOME_PAGE,
+  HOME_CONFIG_EXPIRED_TIME,
+  HOME_PAGE,
 } from '@/common/constants'
 
 import { cache, getFileAccessHttpUrl } from '@/common/uitls'
@@ -311,7 +314,7 @@ const checkToken = () => {
       // 超过2小时过期
       clearUserInfo()
     } else {
-      router.pushTab({ path: HOME_PAGE})
+      router.pushTab({ path: HOME_PAGE })
     }
   } else {
     clearUserInfo()
@@ -335,6 +338,8 @@ if (isLocalConfig === false) {
   padding: 0 20upx;
   padding-top: 100upx;
   position: relative;
+  font-size: 15px;
+  color: var(--UI-FG-0);
   .logo {
     width: 200upx;
     height: 150px;
@@ -343,8 +348,8 @@ if (isLocalConfig === false) {
     font-size: 58upx;
   }
   .enter-area {
-    padding-top: 100upx;
-    width: 90%;
+    padding-top: 75px;
+    width: 87%;
     margin: 0 auto 60upx;
     .box {
       display: flex;
@@ -378,6 +383,19 @@ if (isLocalConfig === false) {
     }
     :deep(.sendSMSBtn) {
       margin-left: 20upx;
+    }
+    :deep(.wd-icon-view),
+    :deep(.wd-icon-eye-close) {
+      color: #555;
+    }
+  }
+  .btn-area {
+    :deep(.wd-button) {
+      --wot-button-medium-height: 41px;
+      --wot-button-medium-fs: 16px;
+      --wot-button-plain-bg-color: transparent;
+      min-width: 100px;
+      box-shadow: 3px 3px 4px rgba(0, 102, 204, 0.2);
     }
   }
 }

@@ -18,7 +18,7 @@ export const us = {
       enabled: true,
     },
     {
-      title: 'demo',
+      title: '组件示例',
       icon: icon_prefix + 'chuchai.png',
       description: '出差申请',
       useCount: 10000,

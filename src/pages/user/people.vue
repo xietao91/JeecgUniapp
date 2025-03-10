@@ -272,9 +272,12 @@ onLoad(() => {
 }
 .info-area {
   display: flex;
-  padding: 20upx;
+  padding: 30upx;
   background-color: #fff;
   color: #8799a3;
+  :deep(.wd-text) {
+    color: var(--color-gray);
+  }
   .user,
   .job {
     flex: 1;
@@ -303,9 +306,17 @@ onLoad(() => {
     }
   }
 }
-.wd-cell-group {
+:deep(.wd-cell-group) {
   margin: 0 26upx;
   border-radius: 18upx;
   overflow: hidden;
+  --wot-cell-line-height: 32px;
+  .wd-cell {
+    --wot-cell-title-fs: 15px;
+    --wot-cell-title-color: var(--color-gray);
+    .wd-cell__left {
+      font-size: 15px;
+    }
+  }
 }
 </style>

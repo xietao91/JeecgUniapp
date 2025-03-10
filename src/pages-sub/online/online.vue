@@ -31,7 +31,10 @@
           <template v-if="item.tableType != 3">
             <wd-swipe-action>
               <view class="list" @click="handleGo(item)">
-                <view class="cIcon" :style="{ 'background-color': getRandomColor() }">
+                <view
+                  class="cIcon"
+                  :style="{ 'background-color': getBackgroundColor(item, index) }"
+                >
                   <view class="u-iconfont u-icon-table"></view>
                 </view>
                 <view class="tableTxt ellipsis">{{ item.tableTxt }}</view>
@@ -73,6 +76,7 @@ const paramsStore = useParamsStore()
 const paging = ref(null)
 const dataList: any = ref([])
 const keyword = ref('')
+const itemBgColor = []
 // 接口拿到的数据处理之后的
 
 const handleGo = (item) => {
@@ -168,6 +172,12 @@ const getType = (record) => {
   // }
   return tbTypeText
 }
+const getBackgroundColor = (item, index) => {
+  return itemBgColor[index % itemBgColor.length]
+}
+for (let i = 0; i < 50; i++) {
+  itemBgColor.push(getRandomColor())
+}
 </script>
 
 <style lang="scss" scoped>
@@ -207,7 +217,7 @@ const getType = (record) => {
   }
   .createTime {
     text-align: right;
-    width: 70px;
+    width: 75px;
     font-size: 12px;
     color: #919191;
   }

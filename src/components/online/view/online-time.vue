@@ -39,7 +39,6 @@ const props = defineProps({
 // 定义 emits
 const emit = defineEmits(['input', 'change', 'update:value'])
 // 定义响应式数据;
-const visible = ref(false)
 const currentTime = ref('')
 
 // 监听 value 的变化

@@ -11,41 +11,49 @@
 <template>
   <PageLayout navTitle="表单">
     <wd-form ref="form" :model="model">
-      <wd-cell-group border>
+      <wd-cell-group border class="mt-10px mb-10px">
         <wd-input
           label="姓名"
-          label-width="100px"
+          label-width="80px"
           prop="value1"
           clearable
           v-model="model.value1"
           placeholder="姓名"
           :rules="[{ required: true, message: '请填写姓名' }]"
         />
-        <wd-input
-          label="密码"
-          label-width="100px"
-          prop="value2"
-          show-password
-          clearable
-          v-model="model.value2"
-          placeholder="请输入密码"
-          :rules="[{ required: true, message: '请填写密码' }]"
-        />
         <wd-picker
-          label="性别"
-          prop="value3"
-          :columns="columns"
-          v-model="model.value3"
-          :rules="[{ required: true, message: '请选择性别' }]"
+            label="性别"
+            label-width="80px"
+            prop="value3"
+            :columns="columns"
+            v-model="model.value3"
+            :rules="[{ required: true, message: '请选择性别' }]"
         />
+      </wd-cell-group>
+      <wd-cell-group border class="mb-10px">
+        <wd-input
+            label="密码"
+            label-width="80px"
+            prop="value2"
+            show-password
+            clearable
+            v-model="model.value2"
+            placeholder="请输入密码"
+            :rules="[{ required: true, message: '请填写密码' }]"
+        />
+
         <wd-select-picker
-          label="爱好"
-          prop="value4"
-          v-model="model.value4"
-          :columns="selectColumns"
-          :rules="[{ required: true, message: '请选择爱好' }]"
+            label="爱好"
+            label-width="80px"
+            prop="value4"
+            v-model="model.value4"
+            :columns="selectColumns"
+            :rules="[{ required: true, message: '请选择爱好' }]"
         ></wd-select-picker>
-        <wd-calendar prop="value5" v-model="model.value5" label="出生" />
+      </wd-cell-group class="mb-10px">
+
+      <wd-cell-group border>
+        <wd-calendar  label-width="80px" prop="value5" v-model="model.value5" label="&nbsp;&nbsp;&nbsp;出生" />
       </wd-cell-group>
       <view class="footer">
         <wd-button type="primary" size="large" @click="handleSubmit" block>提交</wd-button>
@@ -109,5 +117,7 @@ function handleSubmit() {
 </script>
 
 <style lang="scss" scoped>
-//
+.footer{
+  margin: 10px;
+}
 </style>

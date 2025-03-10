@@ -12,7 +12,7 @@
 <PageLayout :navTitle="title">
  <scroll-view class="scroll-area" :scroll-y="true" :scroll-with-animation="scrollAnimation" :scroll-top="scrollTop" :scroll-into-view="scrollToView">
 	<view v-for="(item,index) in dragData.compsData" :key="index">
-	  <view class="mt-4 " :class="[dragData.style=='bigScreen'?'bg-black':'bg-white']" :id="'drag'+item.i" :style="[getStyle(item.component)]">
+	  <view class="mt-4 " :class="[dragData.style=='bigScreen'?'bg-white':'bg-white']" :id="'drag'+item.i" :style="[getStyle(item.component)]">
 			<template v-if="compList.includes(item.component)">
 				<!-- #ifdef APP-PLUS || H5 -->
 				<component

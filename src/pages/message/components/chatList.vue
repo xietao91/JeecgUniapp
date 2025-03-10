@@ -229,6 +229,12 @@ const handleGo = (item) => {
   .uni-list-chat__content-title {
     color: #9ca3af;
   }
+  .uni-list-chat__content-title {
+    font-size: 15px;
+  }
+  .uni-list-chat__header {
+    background-color: #eee;
+  }
 }
 :deep(.wd-popup) {
   &.wd-popup--bottom {

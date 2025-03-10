@@ -100,7 +100,7 @@ const props = defineProps({
   },
   modalTitle: {
     type: String,
-    default: '',
+    default: '选择用户',
   },
   maxSelectCount: {
     type: Number,
@@ -273,5 +273,10 @@ init()
 }
 .wrap {
   height: 100%;
+}
+:deep(.wd-popup-wrapper) {
+  .wd-popup {
+    top: 100px;
+  }
 }
 </style>

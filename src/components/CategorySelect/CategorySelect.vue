@@ -12,7 +12,7 @@
       <view class="content">
         <view class="operation">
           <view class="cancel text-gray-5" @click.stop="cancel">取消</view>
-          <view class="confrim text-blue-5" @click.stop="confirm">确定</view>
+          <view class="confrim" @click.stop="confirm">确定</view>
         </view>
         <scroll-view class="flex-1" scroll-y>
           <DaTree
@@ -228,12 +228,25 @@ watch(
     justify-content: space-between;
     line-height: 40px;
     padding: 0 5px;
+    position: relative;
+    &::before {
+      content: ' ';
+      position: absolute;
+      bottom: 0;
+      left: 8px;
+      right: 8px;
+      height: 1px;
+      background-color: #e5e5e5;
+    }
     .cancel,
     .confrim {
       font-size: 15px;
       height: 40px;
       min-width: 40px;
       text-align: center;
+    }
+    .confrim {
+      color: var(--wot-color-theme);
     }
   }
   :deep(.da-tree) {

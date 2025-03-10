@@ -186,7 +186,6 @@ const handleChange = ({ option, data }) => {
   if (option.key === 'edit') {
     handleEdit(data)
   } else if (option.key === 'delete') {
-
     uni.showModal({
       title: '提示',
       content: '确定要删除吗？',
@@ -194,7 +193,7 @@ const handleChange = ({ option, data }) => {
       confirmText: '确定',
       success: (res) => {
         if (res.confirm) {
-          http.get(`/online/cgform/api/form/${pageParams.id}/${data.id}`).then((res) => {
+          http.delete(`/online/cgform/api/form/${pageParams.id}/${data.id}`).then((res) => {
             toast.success('删除成功~')
             getData()
           })
@@ -204,7 +203,7 @@ const handleChange = ({ option, data }) => {
         console.log(err)
       },
     })
-  }else if (option.key === 'detail') {
+  } else if (option.key === 'detail') {
     handleView(data)
   }
 }
@@ -240,11 +239,19 @@ onMounted(() => {
   bottom: 80upx;
   right: 30upx;
   box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.1);
+  color: #666;
 }
 :deep(.wd-table__content) {
   .wot-theme-light {
     // width: 100%;
     // height: 100%;
+  }
+}
+
+:deep(.wd-table) {
+  --wot-table-font-size: 14px;
+  .wd-table__body {
+    --wot-table-color: var(--color-gray);
   }
 }
 </style>

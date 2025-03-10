@@ -9,28 +9,28 @@
 </route>
 
 <template>
-  <PageLayout backRouteName="index" routeMethod="pushTab">
+  <PageLayout backRouteName="index" navTitle="组件示例" routeMethod="pushTab">
     <scroll-view scroll-y>
-      <view class="box">
+      <view class="box shadow-warp">
         <div class="content">
-          <SelectUser label="用户" :required="true" v-model="user"></SelectUser>
+          <SelectUser label="用户：" :required="true" v-model="user"></SelectUser>
         </div>
       </view>
-      <view class="box">
+      <view class="box shadow-warp">
         <div class="content">
-          <SelectDept label="部门" :required="true" v-model="dept"></SelectDept>
+          <SelectDept label="部门：" :required="true" v-model="dept"></SelectDept>
         </div>
       </view>
-      <view class="box">
+      <view class="box shadow-warp">
         <div class="content">
-          <view class="title mb-2">流程进度图组件</view>
+          <!-- <view class="title mb-2">流程进度图组件</view> -->
           <ProgressMap title="流程历史跟踪" :dataSource="proDataSource"></ProgressMap>
         </div>
       </view>
-      <view class="box" v-for="(item, index) in dataSource">
+      <view class="box shadow-warp" v-for="(item, index) in dataSource">
         <view class="content">
           <template v-if="index === 0">
-            <view class="title">万年历组件</view>
+            <!-- <view class="title">万年历组件</view> -->
             <uni-calendar
               :showMonth="true"
               @change="change"
@@ -42,6 +42,7 @@
             <view class="title">{{ item.title }}</view>
             <template v-if="['图片预览'].includes(item.title)">
               <wd-img
+                custom-class="imgView"
                 :width="220"
                 :height="120"
                 src="https://jeecgos.oss-cn-beijing.aliyuncs.com/files/site/projectCase/mini/banner/10bdc1.jpg"
@@ -57,42 +58,39 @@
           </template>
         </view>
       </view>
-      <view class="box gridBox">
+      <view class="box router shadow-warp">
+        <wd-button @click="handleSkip('/pages/demo/tree')">树组件</wd-button>
+        <wd-button @click="handleSkip('/pages/demo/indexBar')">通讯录</wd-button>
+        <wd-button @click="handleSkip('/pages/demo/selectPicker')">单选多选</wd-button>
+        <wd-button @click="handleSkip('/pages/demo/form')">表单</wd-button>
+      </view>
+      <view class="box gridBox shadow-warp">
         <view class="content">
-          <view class="title">九宫格</view>
-          <wd-grid :column="3">
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-            <wd-grid-item icon="picture" text="文字" />
-          </wd-grid>
+          <!-- <view class="title">九宫格</view> -->
+          <Grid
+            v-model="gridData"
+            :column="3"
+            @itemClik="(item) => toast.info(`点击了${item.text}`)"
+          ></Grid>
         </view>
       </view>
-      <view class="box">
+      <wd-cell-group border clickable custom-class="shadow-warp">
+        <wd-cell title="组织管理" is-link icon="computer"></wd-cell>
+        <wd-cell title="安全设置" is-link icon="setting"></wd-cell>
+        <wd-cell title="个人设置" is-link icon="user"></wd-cell>
+        <wd-cell title="退出登录" is-link icon="login"></wd-cell>
+      </wd-cell-group>
+      <view class="box shadow-warp p-3">
         <view class="content">
-          <view class="title">列表</view>
-          <wd-cell-group border clickable>
-            <wd-cell title="组织管理" is-link icon="computer"></wd-cell>
-            <wd-cell title="安全设置" is-link icon="setting"></wd-cell>
-            <wd-cell title="个人设置" is-link icon="user"></wd-cell>
-            <wd-cell title="退出登录" is-link icon="email"></wd-cell>
-          </wd-cell-group>
-        </view>
-      </view>
-      <view class="box">
-        <view class="content">
-          <view class="title">提示</view>
+          <!-- <view class="title">提示</view> -->
           <view class="flex flex-col">
-            <wd-button custom-class="mb-2" @click="handleToast(0)">常规</wd-button>
-            <wd-button custom-class="mb-2" @click="handleToast(1)">警告</wd-button>
-            <wd-button custom-class="mb-2" @click="handleToast(2)">成功</wd-button>
-            <wd-button custom-class="mb-2" @click="handleToast(3)">错误</wd-button>
-            <wd-button custom-class="mb-2" @click="handleToast(4)">错误</wd-button>
+            <wd-button custom-class="mb-2 info" @click="handleToast(0)">常规</wd-button>
+            <wd-button custom-class="mb-2 warning" @click="handleToast(1)">警告</wd-button>
+            <wd-button custom-class="mb-2 success" @click="handleToast(2)">成功</wd-button>
+            <wd-button custom-class="mb-2 error" @click="handleToast(3)">错误</wd-button>
+            <wd-button custom-class="mb-2 basic" @click="handleToast(4)">
+              基本用法(无icon)
+            </wd-button>
             <wd-button @click="handleConfirm">确认提示</wd-button>
           </view>
         </view>
@@ -106,6 +104,8 @@
 import { ref } from 'vue'
 import { useRouter } from '@/plugin/uni-mini-router'
 import { useToast, useMessage, useNotify } from 'wot-design-uni'
+import { us, os } from '@/common/work'
+import Grid from '@/components/Grid/Grid.vue'
 
 const toast = useToast()
 const user = ref('')
@@ -115,6 +115,12 @@ const { showNotify, closeNotify } = useNotify()
 
 const router = useRouter()
 const selected = ref([])
+const gridData = ref([])
+us.data.forEach((item: any, index) => {
+  if (index < 9) {
+    gridData.value.push({ text: item.title, img: item.icon, itemKey: index })
+  }
+})
 // 图片预览
 const imgPreview = ref({
   show: false,
@@ -154,11 +160,15 @@ const proDataSource = [
 ]
 const dataSource = ref([
   { title: '万年历组件' },
-  { title: '树示例', path: '/pages/demo/tree' },
-  { title: '通讯录', path: '/pages/demo/indexBar' },
   { title: '图片预览' },
-  { title: '单选多选', path: '/pages/demo/selectPicker' },
-  { title: '表单', path: '/pages/demo/form' },
+  // {
+  //   group: [
+  //     { title: '树组件', path: '/pages/demo/tree' },
+  //     { title: '通讯录', path: '/pages/demo/indexBar' },
+  //     { title: '单选多选', path: '/pages/demo/selectPicker' },
+  //     { title: '表单', path: '/pages/demo/form' },
+  //   ],
+  // },
 ])
 const handleSkip = (path) => {
   router.push({ path: path })
@@ -166,19 +176,23 @@ const handleSkip = (path) => {
 const handleToast = (value) => {
   switch (value) {
     case 0:
-      toast.info('常规提示信息')
+      // 909cb8
+      toast.info({ msg: '常规提示信息', duration: 10000 })
       break
     case 1:
-      toast.warning('提示信息')
+      // f0863b
+      toast.warning({ msg: '提示信息', duration: 10000 })
       break
     case 2:
-      toast.success('操作成功')
+      // 33d19d
+      toast.success({ msg: '操作成功', duration: 10000 })
       break
     case 3:
-      toast.error('手机验证码输入错误，请重新输入')
+      // f04550
+      toast.error({ msg: '手机验证码输入错误，请重新输入', duration: 10000 })
       break
     case 4:
-      toast.show('普通提示信息')
+      toast.show({ msg: '手机验证码输入错误，请重新输入', duration: 10000 })
       break
   }
 }
@@ -205,31 +219,62 @@ const handleConfirm = (params) => {
 
 .box {
   background-color: #fff;
-  margin: 16px;
+  margin: 25px 16px;
   .title {
     padding: 10px;
     padding-bottom: 0;
-    font-size: 30upx;
-    font-weight: bolder;
-    color: #e4680a;
+    font-size: 15;
+    color: #666666;
     margin-bottom: 20upx;
   }
-  .wd-grid-item {
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    &:nth-child(1),
-    &:nth-child(2),
-    &:nth-child(3) {
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    &:nth-child(3n) {
-      border-right: none;
-    }
-  }
+
   .content {
     :deep(.wd-button),
-    :deep(.wd-img) {
+    :deep(.imgView) {
       margin: 10px;
+    }
+    :deep(.wd-button) {
+      &.info {
+        background-color: #909cb8;
+      }
+      &.warning {
+        background-color: #f0863b;
+      }
+      &.success {
+        background-color: #33d19d;
+      }
+      &.error {
+        background-color: #f04550;
+      }
+    }
+  }
+}
+.router {
+  padding: 30px 15px;
+  display: flex;
+  flex-wrap: wrap;
+  .wd-button {
+    margin-bottom: 15px;
+    &:nth-child(3),
+    &:nth-child(4) {
+      margin-bottom: 0;
+    }
+  }
+}
+:deep(.wd-cell-group) {
+  margin: 0 26upx;
+  border-radius: 18upx;
+  overflow: hidden;
+  --wot-cell-line-height: 32px;
+  .wd-icon {
+    margin-right: 10px;
+  }
+  .wd-cell {
+    --wot-cell-title-fs: 15px;
+    --wot-cell-title-color: var(--color-gray);
+    .wd-cell__left {
+      font-size: 15px;
+      font-weight: 300;
     }
   }
 }

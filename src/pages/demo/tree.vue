@@ -28,9 +28,9 @@
         <wd-button @click="doCheckedTree(['211', '222'], false)">取消选中指定节点</wd-button>
       </view>
     </view>
-    <scroll-view scroll-y>
-      <view class="content p-2">
-        <view>多选</view>
+    <scroll-view class="bg-gray-1" scroll-y>
+      <view class="content p-2 mt-14px">
+        <view class="title mt-5">多选</view>
         <DaTree
           ref="DaTreeRef"
           :data="roomTreeData"
@@ -42,7 +42,9 @@
           @change="handleTreeChange"
           @expand="handleExpandChange"
         ></DaTree>
-        <view>单选</view>
+      </view>
+      <view class="content p-2 mt-14px">
+        <view class="title mt-5">单选</view>
         <DaTree
           :data="roomTreeData"
           labelField="name"
@@ -52,7 +54,9 @@
           @change="handleTreeChange"
           @expand="handleExpandChange"
         ></DaTree>
-        <view>默认展开指定节点</view>
+      </view>
+      <view class="content p-2 mt-14px">
+        <view class="title mt-5">默认展开指定节点</view>
         <DaTree
           :data="roomTreeData"
           labelField="name"
@@ -62,7 +66,9 @@
           @change="handleTreeChange"
           @expand="handleExpandChange"
         ></DaTree>
-        <view>异步加载数据</view>
+      </view>
+      <view class="content p-2 mt-14px mb-14px">
+        <view class="title mt-5">异步加载数据</view>
         <DaTree
           :data="roomTreeData"
           labelField="name"
@@ -180,7 +186,7 @@ const roomTreeData = ref([
           {
             id: '232',
             name: '人力二部',
-            append: '更多示例，请下载示例项目查看',
+            // append: '更多示例，请下载示例项目查看',
           },
         ],
       },
@@ -223,5 +229,8 @@ function handleExpandChange(expand, currentItem) {
 }
 .content {
   background-color: #fff;
+  .title {
+    font-size: 15px;
+  }
 }
 </style>

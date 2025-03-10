@@ -320,3 +320,12 @@ export function getRandomColor() {
 	let randomColorType = colorType[randomIndex];
 	return colorPanel['natural'][getRandomIntBetweenOneAndTen()] || '#00bcd4';
 }
+
+// 消除后缀：
+export const getPlaceholder = (attrs: any = {}) => {
+  let label = attrs.label
+  if (label.endsWith('：') || label.endsWith(':')) {
+    label = label.substr(0, label.length - 1)
+  }
+  return `请选择${label}`
+}

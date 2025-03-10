@@ -230,6 +230,7 @@ onLoad(() => {
   border-radius: 50%;
   overflow: hidden;
   margin-right: 10px;
+  background-color: #eee;
 }
 .content {
   display: flex;

@@ -23,11 +23,11 @@
       </view>
       <view class="flex">
         <wd-text
-          custom-class="icon cuIcon-attentionfill mr-10px"
+          custom-class="cIcon cuIcon-attentionfill mr-10px"
           text="10"
           @click="numberPlus"
         ></wd-text>
-        <wd-text class="icon cuIcon-appreciatefill" text="20" @click="numberPlus"></wd-text>
+        <wd-text class="cIcon cuIcon-appreciatefill" text="20" @click="numberPlus"></wd-text>
       </view>
     </view>
   </PageLayout>
@@ -79,15 +79,16 @@ onLoad((option) => {
 
 <style lang="scss" scoped>
 //
-.title {
-  --wot-text-info-color: #333;
-  margin-bottom: 10px;
-}
-.wd-text {
-  &.icon {
+:deep(.wd-text) {
+   --wot-text-info-color: var(--color-grey);
+  &.cIcon {
     &::before {
       margin-right: 4px;
     }
   }
+}
+.title {
+  --wot-text-info-color: #333;
+  margin-bottom: 10px;
 }
 </style>

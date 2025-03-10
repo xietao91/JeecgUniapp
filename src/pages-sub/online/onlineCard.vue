@@ -22,8 +22,8 @@
             <view class="list" @click="handleEdit(item)">
               <template v-for="(cItem, cIndex) in columns" :key="index">
                 <view v-if="cIndex < 3" class="box" :style="getBoxStyle">
-                  <view class="field">{{ cItem['title'] }}</view>
-                  <view class="value">
+                  <view class="field ellipsis">{{ cItem['title'] }}</view>
+                  <view class="value text-grey">
                     <onlineTableCell
                       :columnsInfo="columnsInfo"
                       :record="item"
@@ -152,7 +152,7 @@ const getData = () => {
 }
 const handleAction = (val, item) => {
   if (val == 'del') {
-    http.get(`/online/cgform/api/form/${pageParams.id}/${item.id}`).then((res) => {
+    http.delete(`/online/cgform/api/form/${pageParams.id}/${item.id}`).then((res) => {
       toast.success('删除成功~')
       paging.value.reload()
     })
@@ -219,6 +219,7 @@ onMounted(() => {
     width: 33%;
     .field {
       margin-bottom: 10px;
+      line-height: 20px;
     }
   }
 }
@@ -255,6 +256,7 @@ onMounted(() => {
   bottom: 80upx;
   right: 30upx;
   box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.1);
+  color: #666;
 }
 .goTable {
   bottom: 180upx;

@@ -25,45 +25,22 @@
     </swiper>
     <scroll-view class="scrollView" :scroll-y="true" scroll-with-animation>
       <!--流程服务-->
-<!--      <wd-row>-->
-<!--        <wd-col :span="12" v-for="(item, index) in middleApps" :key="index">-->
-<!--          <wd-img :width="50" :height="50" :src="getFileAccessHttpUrl(item.icon)"></wd-img>-->
-<!--          <view class="textBox">-->
-<!--            <wd-text :text="item.title"></wd-text>-->
-<!--            <wd-text :text="item.subTitle"></wd-text>-->
-<!--          </view>-->
-<!--        </wd-col>-->
-<!--      </wd-row>-->
+      <!--      <wd-row>-->
+      <!--        <wd-col :span="12" v-for="(item, index) in middleApps" :key="index">-->
+      <!--          <wd-img :width="50" :height="50" :src="getFileAccessHttpUrl(item.icon)"></wd-img>-->
+      <!--          <view class="textBox">-->
+      <!--            <wd-text :text="item.title"></wd-text>-->
+      <!--            <wd-text :text="item.subTitle"></wd-text>-->
+      <!--          </view>-->
+      <!--        </wd-col>-->
+      <!--      </wd-row>-->
       <!--常用服务-->
       <view class="serveBox">
         <view class="title">
           <view class="dot"></view>
           <wd-text text="常用服务"></wd-text>
         </view>
-        <wd-grid :column="4" clickable>
-          <template v-for="(item, index) in usList" :key="index">
-            <wd-grid-item
-              :custom-class="item.enabled && 'enabled'"
-              :text="item.title"
-              use-icon-slot
-              @itemclick="goPage(item)"
-            >
-              <template #icon>
-                <image class="slot-img" :src="item.icon" />
-              </template>
-            </wd-grid-item>
-          </template>
-          <wd-grid-item
-            custom-class="enabled"
-            text="更多"
-            use-icon-slot
-            @itemclick="goPageMore('common')"
-          >
-            <template #icon>
-              <image class="slot-img" src="/static/index/128/more.png" />
-            </template>
-          </wd-grid-item>
-        </wd-grid>
+        <Grid :column="4" v-model="usList" @itemClik="goPage"></Grid>
       </view>
       <!--其他服务-->
       <view class="serveBox">
@@ -71,25 +48,7 @@
           <view class="dot"></view>
           <wd-text text="其他服务"></wd-text>
         </view>
-        <wd-grid :column="4" clickable>
-          <template v-for="(item, index) in osList" :key="index">
-            <wd-grid-item :text="item.title" use-icon-slot>
-              <template #icon>
-                <image class="slot-img" :src="item.icon" />
-              </template>
-            </wd-grid-item>
-          </template>
-          <wd-grid-item
-            custom-class="enabled"
-            text="更多"
-            use-icon-slot
-            @itemclick="goPageMore('other')"
-          >
-            <template #icon>
-              <image class="slot-img" src="/static/index/128/more.png" />
-            </template>
-          </wd-grid-item>
-        </wd-grid>
+        <Grid :column="4" v-model="osList" @itemClik="goPage"></Grid>
       </view>
     </scroll-view>
   </PageLayout>
@@ -105,6 +64,8 @@ import { cache, getFileAccessHttpUrl, hasRoute } from '@/common/uitls'
 import { onLaunch, onShow, onHide, onLoad, onReady } from '@dcloudio/uni-app'
 import { useToast, useMessage, useNotify } from 'wot-design-uni'
 import { useRouter } from '@/plugin/uni-mini-router'
+import Grid from '@/components/Grid/Grid.vue'
+
 import {
   ACCESS_TOKEN,
   USER_NAME,
@@ -120,7 +81,7 @@ defineOptions({
   options: {
     // apply-shared‌：当前页面样式会影响到子组件样式.(小程序)
     // shared‌：当前页面样式影响到子组件，子组件样式也会影响到当前页面.(小程序)
-    styleIsolation: '‌apply-shared‌',
+    styleIsolation: 'shared',
   },
 })
 const toast = useToast()
@@ -141,6 +102,10 @@ const goPage = (item) => {
   if (!page) {
     toast.info('该功能暂未实现')
   } else {
+    if (['other', 'common'].includes(page)) {
+      goPageMore(page)
+      return
+    }
     if (page === 'annotationList') {
       msgCount.value = 0
     }
@@ -206,8 +171,30 @@ onReady(() => {
 })
 
 if (isLocalConfig) {
-  usList.value = us.data
-  osList.value = os.data
+  usList.value = us.data.map((item) => ({
+    ...item,
+    text: item.title,
+    img: item.icon,
+    itemKey: item.routeIndex,
+  }))
+  osList.value = os.data.map((item) => ({
+    ...item,
+    text: item.title,
+    img: item.icon,
+    itemKey: item.routeIndex,
+  }))
+  usList.value.push({
+    text: '更多',
+    img: '/static/index/128/more.png',
+    routeIndex: 'other',
+    itemKey: 'other',
+  })
+  osList.value.push({
+    text: '更多',
+    img: '/static/index/128/more.png',
+    routeIndex: 'common',
+    itemKey: 'common',
+  })
   middleApps.value = [
     {
       icon: 'https://static.jeecg.com/upload/test/line2_icon1_1595818065964.png',
@@ -291,7 +278,7 @@ if (isLocalConfig) {
       align-items: center;
       justify-content: center;
       &:first-child {
-        border-right: 1px solid rgba(0, 0, 0, 0.1);
+        border-right: 1px solid rgba(165, 165, 165, 0.1);
       }
       .wd-img {
         margin: 20upx;
@@ -329,7 +316,7 @@ if (isLocalConfig) {
       display: flex;
       align-items: center;
       padding-left: 30upx;
-      height: 90upx;
+      height: 52px;
       .dot {
         width: 14upx;
         height: 14upx;
@@ -339,24 +326,7 @@ if (isLocalConfig) {
       }
       .wd-text {
         color: #666;
-        font-size: 30upx;
-      }
-    }
-    :deep(.wd-grid-item) {
-      border-right: 1px solid rgba(0, 0, 0, 0.1);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      &:nth-child(1),
-      &:nth-child(2),
-      &:nth-child(3),
-      &:nth-child(4) {
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
-      }
-      &:nth-child(4n) {
-        border-right: none;
-      }
-      .slot-img {
-        height: 28px;
-        width: 28px;
+        font-size: 15px;
       }
     }
   }

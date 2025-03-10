@@ -3,13 +3,18 @@
     <view class="form-container">
       <wd-form ref="form" :model="formData">
         <wd-cell-group border>
-          <template v-for="(item, index) in rootProperties" :key="index">
+          <view
+            class="onlineLoader-form"
+            v-for="(item, index) in rootProperties"
+            :key="index"
+            :class="{ 'mt-14px': index % 2 == 0 }"
+          >
             <!-- 图片 -->
             <wd-cell
               v-if="item.type == 'image'"
               :name="item.key"
-              :title="item.label"
-              title-width="80px"
+              :title="get4Label(item.label)"
+              :title-width="labelWidth"
               :required="fieldRequired(item)"
             >
               <online-image
@@ -24,8 +29,8 @@
             <wd-cell
               v-else-if="item.type == 'file'"
               :name="item.key"
-              :title="item.label"
-              title-width="80px"
+              :title="get4Label(item.label)"
+              :title-width="labelWidth"
               :required="fieldRequired(item)"
             >
               <online-image
@@ -40,7 +45,8 @@
             <!-- 日期时间 -->
             <online-datetime
               v-else-if="item.type === 'datetime'"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :name="item.key"
               :disabled="componentDisabled(item)"
               v-model:value="formData[item.key]"
@@ -50,7 +56,8 @@
             <!-- 日期 -->
             <online-date
               v-else-if="item.type === 'date'"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :name="item.key"
               :type="getDateExtendType(item.formSchema)"
               :disabled="componentDisabled(item)"
@@ -61,7 +68,8 @@
             <!-- 时间 -->
             <online-time
               v-else-if="item.type === 'time'"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :name="item.key"
               :disabled="componentDisabled(item)"
               v-model:value="formData[item.key]"
@@ -71,7 +79,8 @@
             <!-- 下拉选择 -->
             <online-select
               v-else-if="item.type === 'list' || item.type === 'sel_search'"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :name="item.key"
               :type="item.type"
               :dict="item.listSource"
@@ -86,7 +95,8 @@
               v-else-if="item.type === 'checkbox'"
               :name="item.key"
               :type="item.type"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :dict="item.listSource"
               :disabled="componentDisabled(item)"
               :required="fieldRequired(item)"
@@ -97,7 +107,8 @@
             <online-radio
               v-else-if="item.type === 'radio'"
               :name="item.key"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :type="item.type"
               :dict="item.listSource"
               :disabled="componentDisabled(item)"
@@ -108,7 +119,8 @@
             <!-- 下拉多选  -->
             <online-multi
               v-else-if="item.type === 'list_multi'"
-              :label="item.label"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
               :name="item.key"
               :dict="item.listSource"
               :disabled="componentDisabled(item)"
@@ -118,20 +130,21 @@
 
             <!-- 省市区   -->
             <online-pca
-                v-else-if="item.type==='pca'"
-                :name="item.key"
-                :label="item.label"
-                :disabled="componentDisabled(item)"
-                :required="fieldRequired(item)"
-                v-model:value="formData[item.key]">
-            </online-pca>
+              v-else-if="item.type === 'pca'"
+              :name="item.key"
+              :label="get4Label(item.label)"
+              :labelWidth="labelWidth"
+              :disabled="componentDisabled(item)"
+              :required="fieldRequired(item)"
+              v-model:value="formData[item.key]"
+            ></online-pca>
 
             <!-- 数字框 小数 -->
             <wd-input
               v-else-if="item.type === 'number' && (!item.onlyInteger || item.onlyInteger == false)"
-              label-width="80px"
+              :label-width="labelWidth"
               v-model="formData[item.key]"
-              :label="item.label"
+              :label="get4Label(item.label)"
               :name="item.key"
               inputMode="decimal"
               :disabled="componentDisabled(item)"
@@ -142,8 +155,8 @@
             <!-- 数字框 整数 -->
             <wd-input
               v-else-if="item.type === 'number' && item.onlyInteger === true"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :name="item.key"
               v-model="formData[item.key]"
               inputMode="numeric"
@@ -156,15 +169,16 @@
             <wd-cell
               v-else-if="item.type == 'switch'"
               :name="item.key"
-              :title="item.label"
-              title-width="80px"
+              :title="get4Label(item.label)"
+              :title-width="labelWidth"
               center
               :required="fieldRequired(item)"
             >
               <view style="text-align: left">
                 <wd-switch
-                  :label="item.label"
+                  :label="get4Label(item.label)"
                   :name="item.key"
+                  size="18px"
                   :disabled="componentDisabled(item)"
                   v-model="formData[item.key]"
                   :active-value="switchOpt(item.formSchema?.extendOption, 0)"
@@ -176,12 +190,12 @@
             <!-- 多行文本 -->
             <wd-textarea
               v-else-if="['textarea', 'markdown', 'umeditor'].includes(item.type)"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :name="item.key"
               v-model="formData[item.key]"
-              auto-height
-              :maxlength="500"
+              clearable
+              :maxlength="300"
               :disabled="componentDisabled(item)"
               :placeholder="item.placeholder"
               :rules="item.rules"
@@ -189,21 +203,20 @@
             <!-- 密码输入框 -->
             <wd-input
               v-else-if="item.type === 'password'"
-              label-width="80px"
+              :label-width="labelWidth"
               v-model="formData[item.key]"
               :disabled="componentDisabled(item)"
-              :label="item.label"
+              :label="get4Label(item.label)"
               :name="item.key"
               :placeholder="item.placeholder"
               :rules="item.rules"
-              clearable
               show-password
             />
             <!-- popup字典 -->
             <PopupDict
               v-else-if="item.type === 'popup_dict'"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :disabled="componentDisabled(item)"
               :required="fieldRequired(item)"
               v-model="formData[item.key]"
@@ -213,8 +226,8 @@
             <!-- popup -->
             <Popup
               v-else-if="item.type === 'popup'"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :disabled="componentDisabled(item)"
               :required="fieldRequired(item)"
               v-model="formData[item.key]"
@@ -225,53 +238,52 @@
             ></Popup>
             <!-- 关联记录 -->
             <online-popup-link-record
-                v-else-if="item.type==='link_table'"
-                label-width="80px"
-                :label="item.label"
-                :name="item.key"
-                v-model:formSchema="item.formSchema"
-                :disabled="componentDisabled(item)"
-                :required="fieldRequired(item)"
-                v-model:value="formData[item.key]"
-                @selected="linkRecordChange"
-            >
-            </online-popup-link-record>
+              v-else-if="item.type === 'link_table'"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
+              :name="item.key"
+              v-model:formSchema="item.formSchema"
+              :disabled="componentDisabled(item)"
+              :required="fieldRequired(item)"
+              v-model:value="formData[item.key]"
+              @selected="linkRecordChange"
+            ></online-popup-link-record>
             <!-- 他表字段 -->
             <wd-input
-              v-else-if="item.type==='link_table_field'"
-              label-width="80px"
+              v-else-if="item.type === 'link_table_field'"
+              :label-width="labelWidth"
               v-model="formData[item.key]"
               :disabled="true"
-              :label="item.label"
+              :label="get4Label(item.label)"
               :name="item.key"
             />
             <!-- 用户选择   -->
             <select-user
-                v-else-if="item.type==='sel_user'"
-                label-width="80px"
-                :name="item.key"
-                :label="item.label"
-                :disabled="componentDisabled(item)"
-                :required="fieldRequired(item)"
-                v-model="formData[item.key]">
-            </select-user>
+              v-else-if="item.type === 'sel_user'"
+              :label-width="labelWidth"
+              :name="item.key"
+              :label="get4Label(item.label)"
+              :disabled="componentDisabled(item)"
+              :required="fieldRequired(item)"
+              v-model="formData[item.key]"
+            ></select-user>
 
             <!-- 部门选择   -->
             <select-dept
-                v-else-if="item.type==='sel_depart'"
-                label-width="80px"
-                :name="item.key"
-                :label="item.label"
-                labelKey="departName"
-                :disabled="componentDisabled(item)"
-                :required="fieldRequired(item)"
-                v-model="formData[item.key]">
-            </select-dept>
+              v-else-if="item.type === 'sel_depart'"
+              :label-width="labelWidth"
+              :name="item.key"
+              :label="get4Label(item.label)"
+              labelKey="departName"
+              :disabled="componentDisabled(item)"
+              :required="fieldRequired(item)"
+              v-model="formData[item.key]"
+            ></select-dept>
             <!-- 分类字典树 -->
             <CategorySelect
               v-else-if="item.type === 'cat_tree'"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :disabled="componentDisabled(item)"
               :required="fieldRequired(item)"
               v-model="formData[item.key]"
@@ -280,8 +292,8 @@
             <!-- 自定义树 -->
             <TreeSelect
               v-else-if="item.type === 'sel_tree'"
-              label-width="80px"
-              :label="item.label"
+              :label-width="labelWidth"
+              :label="get4Label(item.label)"
               :disabled="componentDisabled(item)"
               :required="fieldRequired(item)"
               v-model="formData[item.key]"
@@ -293,16 +305,16 @@
             <!-- 普通输入框 -->
             <wd-input
               v-else
-              label-width="80px"
+              :label-width="labelWidth"
               v-model="formData[item.key]"
               :disabled="componentDisabled(item)"
-              :label="item.label"
+              :label="get4Label(item.label)"
               :name="item.key"
               :placeholder="item.placeholder"
               :rules="item.rules"
               clearable
             />
-          </template>
+          </view>
         </wd-cell-group>
       </wd-form>
     </view>
@@ -435,6 +447,16 @@ const navTitle = computed(() => {
     return props.title
   }
 })
+// 标题宽度
+const labelWidth = computed(() => {
+  return '100px'
+})
+// 导航标题
+const get4Label = computed(() => {
+  return (lable) => {
+    return `${lable && lable.length > 4 ? lable.substring(0, 4) : lable}：`
+  }
+})
 
 onMounted(() => {
   console.log('开始渲染online表单')
@@ -478,7 +500,7 @@ const isChecked = (opts: any, value: any) => {
  */
 const switchOpt = (opts: any, index: any) => {
   const options = Array.isArray(opts) && opts.length > 0 ? opts : ['Y', 'N']
-  return options[index]+''
+  return options[index] + ''
 }
 /**
  *
@@ -505,12 +527,14 @@ const fieldRequired = (item: any) => {
  * @param linkRecord
  * @param key
  */
-const linkRecordChange = (linkRecord,key) =>{
-  let linkFieldArr = rootProperties.value.filter(item=>item.type==='link_table_field' && item?.formSchema?.dictTable == key);
-  linkFieldArr.forEach(field=>{
-    let value = linkRecord.map(record=>record[field.formSchema.dictText]).join(",");
-    nextTick(()=>{
-      formData.value[field.key] = value;
+const linkRecordChange = (linkRecord, key) => {
+  let linkFieldArr = rootProperties.value.filter(
+    (item) => item.type === 'link_table_field' && item?.formSchema?.dictTable == key,
+  )
+  linkFieldArr.forEach((field) => {
+    let value = linkRecord.map((record) => record[field.formSchema.dictText]).join(',')
+    nextTick(() => {
+      formData.value[field.key] = value
     })
   })
 }
@@ -526,17 +550,19 @@ const backRoute = () => {
  * @param value
  */
 function handleMultiOrDateField() {
-  let finalData = deepClone(formData.value);
+  let finalData = deepClone(formData.value)
   //日期字段
-  let dateFieldArr = rootProperties.value.filter((item) => item.type === 'date' || item.type === 'datetime')
+  let dateFieldArr = rootProperties.value.filter(
+    (item) => item.type === 'date' || item.type === 'datetime',
+  )
   //省市区字段
   let pcaArr = rootProperties.value.filter((item) => item.type === 'pca')
   finalData = Object.keys(finalData).reduce((acc, key) => {
     let value = finalData[key]
     //省市区获取最后一位
-    if (value && pcaArr.length > 0 && pcaArr.map(item=>item.key).includes(key)) {
-      console.log("省市区获取最后一位value",value)
-      value = isArray(value)?value[2]:value.split(",")[2];
+    if (value && pcaArr.length > 0 && pcaArr.map((item) => item.key).includes(key)) {
+      console.log('省市区获取最后一位value', value)
+      value = isArray(value) ? value[2] : value.split(',')[2]
     }
     //是数组的就转换成字符串
     if (value && isArray(value)) {
@@ -842,19 +868,47 @@ defineExpose({
 <style lang="scss" scoped>
 .onlineLoader-container {
   .form-container {
+    :deep(.wd-cell-group__body){
+      background: #F1F1F1;
+    }
+    .onlineLoader-form{
+      :deep(.wd-input__label-inner){
+        font-size: 16px;
+      }
+      :deep(.wd-picker__label){
+        font-size: 16px;
+      }
+      :deep(.wd-select-picker__label){
+        font-size: 16px;
+      }
+      :deep(.wd-cell__title){
+        font-size: 16px;
+      }
+      :deep(.wd-textarea__label-inner){
+        font-size: 16px;
+      }
+      :deep(.wd-input__label.is-required){
+         padding-left: 0px;
+       }
+      :deep(.wd-input__label.is-required::after){
+        left: -10px;
+      }
+      :deep(.wd-textarea__clear){
+        color: #bfbfbf;
+      }
+      :deep(.wd-select-picker__clear){
+        color: #bfbfbf;
+      }
+      :deep(.wd-input__clear){
+        color: #bfbfbf;
+      }
+      :deep(.wd-upload__close){
+        color: #bfbfbf;
+      }
+    }
   }
   .footer {
     padding: 12px;
-    //position: fixed;
-    //bottom: 0;
-    //width: 100%;
-  }
-  :deep(.label-class) {
-    color: #999 !important;
-    font-size: 12px !important;
-  }
-  :deep(.uni-input-input:disabled) {
-    -webkit-text-fill-color: #000 !important;
   }
 }
 </style>
