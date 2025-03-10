@@ -109,7 +109,6 @@ VITE_SERVER_BASEURL = 'http://localhost:8080/jeecg-boot';
 
 
 
-
 ### 效果预览
 
 - 基础功能
@@ -126,35 +125,29 @@ VITE_SERVER_BASEURL = 'http://localhost:8080/jeecg-boot';
 
 - 聊天功能
 
-![](https://oscimg.oschina.net/oscnet/up-fbdae8c064e4a756412dec8cb2848c70823.png)
+![](https://oscimg.oschina.net/oscnet/up-64bea8f521888f1c2b192c140ad3ba47024.png)
+![](https://oscimg.oschina.net/oscnet/up-58d50a5ca1e3c15e628ede2dc59e87bca97.png)
+![](https://oscimg.oschina.net/oscnet/up-800a03ecb4238a788ed32ecceefa809895b.png)
+![](https://oscimg.oschina.net/oscnet/up-e840f754aa5927584a8e482662758b45218.png)
+![](https://oscimg.oschina.net/oscnet/up-941cbcc10b4b6fc02d1f62b446764a465c3.png)
 
-![](https://oscimg.oschina.net/oscnet/up-a49b94df0a04139b296b415c6fa3abc5ae3.png)
-
-![](https://oscimg.oschina.net/oscnet/up-918a5c81f0f709712311f1437f4f9838ef2.png)
-
-![](https://oscimg.oschina.net/oscnet/up-748e1ccab26f9d9773e160b10f9b649b13e.png)
-
-![](https://oscimg.oschina.net/oscnet/up-37ef1c19ffb592d8577c29dbad9815879cc.png)
 
 - Online表单
 
-![](https://oscimg.oschina.net/oscnet/up-51e504d5ffe2ba7f54bf490f233a1f7b5a1.png)
+![](https://oscimg.oschina.net/oscnet/up-051105a465e568b6a8935100a5a1af6de69.png)
+![](https://oscimg.oschina.net/oscnet/up-942a0398a8cae684ee2bf8203c3ec96b709.png)
+![](https://oscimg.oschina.net/oscnet/up-dbc6687d6c809f2682c5b2fb013ee6475e5.png)
 
-![](https://oscimg.oschina.net/oscnet/up-a58d90af419635ba27084c4f57b217b0d83.png)
 
-![](https://oscimg.oschina.net/oscnet/up-db01f71412a232d4b387fa09e28d23c3b8a.png)
 
 - 仪表盘
 
-![](https://oscimg.oschina.net/oscnet/up-fa3ffd746f132d816470fd50599a803f43c.png)
-
-![](https://oscimg.oschina.net/oscnet/up-cf3721dff7c440f6752b45a5cdae5b3ae69.png)
+![](https://oscimg.oschina.net/oscnet/up-c31fb30bce7784318b7c3487e44cd3d928b.png)
+![](https://oscimg.oschina.net/oscnet/up-b945e4d0fed55091cc30b63044cbd6cdee4.png)
 
 - 动画展示
 
 ![](https://oscimg.oschina.net/oscnet/up-49e27699eb278c7c6b6748bfeaeb6c13b72.gif)
-
-
 
 
 ### 功能模块
