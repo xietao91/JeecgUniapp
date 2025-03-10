@@ -19,7 +19,7 @@ JeecgUniapp 是`JeecgBoot低代码平台`的配套`APP移动框架`，项目采�
 - 学习成本低、组件丰富、兼容性好、支持iframe嵌入。
 - 新版APP具备低代码能力，包括表单设计、仪表盘设计等。
 - 新版最大亮点是架构升级到 Vue3，适配鸿蒙 Next。
-- 支持使用 VSCode 和 IntelliJ IDEA 开发，不再需要 HBuilderX，这显著提升了开发体验和效率。
+- 支持使用 VSCode 和 IntelliJ IDEA 开发，不再必须 HBuilderX，这显著提升了开发体验和效率。
 
 
 ### 前端技术栈
