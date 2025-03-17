@@ -14,6 +14,11 @@ JeecgUniapp 是`JeecgBoot低代码平台`的配套`APP移动框架`，项目采�
 
 
 
+### 视频介绍
+
+[![](https://upload.jeecg.com/jeecg/qiaoqiaoyunsite/jeecguniappvideo.png)](https://www.bilibili.com/video/BV15QQeYoEfQ)
+
+
 ### 新版特点
 - 一份代码多终端适配，小程序、H5、安卓、ios、鸿蒙Next。
 - 学习成本低、组件丰富、兼容性好、支持iframe嵌入。
