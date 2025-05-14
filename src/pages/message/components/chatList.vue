@@ -23,17 +23,19 @@
               <text class="text-white">{{ getFirstStr(item.fromUserName) }}</text>
             </view>
           </template>
-          <uni-list-chat
-            avatarCircle
-            clickable
-            :title="item.fromUserName"
-            :avatar="getAvatar(item)"
-            :note="getChatType(item)"
-            :time="beautifyTime(item.sendTime)"
-            badge-positon="left"
-            :badge-text="item.unreadNum"
-            @click="handleGo(item)"
-          ></uni-list-chat>
+          <view class="listWrap" :class="curPlatform">
+            <uni-list-chat
+              avatarCircle
+              clickable
+              :title="item.fromUserName"
+              :avatar="getAvatar(item)"
+              :note="getChatType(item)"
+              :time="beautifyTime(item.sendTime)"
+              badge-positon="left"
+              :badge-text="item.unreadNum"
+              @click="handleGo(item)"
+            ></uni-list-chat>
+          </view>
         </view>
       </template>
     </uni-list>
@@ -54,7 +56,10 @@ import { useToast, useMessage, useNotify, dayjs } from 'wot-design-uni'
 import { useRouter } from '@/plugin/uni-mini-router'
 import { beautifyTime } from '@/common/uitls'
 import { useParamsStore } from '@/store/page-params'
-
+import { cache, getFileAccessHttpUrl, hasRoute } from '@/common/uitls'
+import socket from '@/common/socket'
+import { platform } from '@/utils/platform'
+console.log('platform:::', platform)
 defineOptions({
   name: 'chatList',
   options: {
@@ -67,7 +72,10 @@ const paramsStore = useParamsStore()
 const paging = ref(null)
 const avatarList = ref()
 const dataList = ref([])
-
+const curPlatform = ref<string>(platform)
+// #ifdef APP-IOS
+curPlatform.value = 'ios'
+// #endif
 const options = [
   { key: 'backtop', icon: 'backtop', label: '置顶' },
   { key: 'cancelbacktop', icon: 'translate-bold', label: '取消置顶' },
@@ -118,12 +126,12 @@ const getAvatar = (item) => {
   if (['systemNotice'].includes(item.type)) {
   } else if (['group'].includes(item.type)) {
   }
-  return item.fromAvatar ?? ''
+  return getFileAccessHttpUrl(item.fromAvatar) ?? ''
 }
 const getChatType = (item) => {
   switch (item.type) {
     case 'discussion':
-      return '[组消息]'
+      return '[聊天消息]'
     case 'systemNotice':
       return '[系统消息]'
     case 'friend':
@@ -187,9 +195,73 @@ const handleGo = (item) => {
   } else {
     ///3.群组和讨论组
     // TODO
-    toast.warning('暂不支持')
+    paramsStore.setPageParams('chat', { data: item })
+    router.push({ name: 'chat' })
   }
 }
+const onSocketOpen = () => {
+  console.log('启动webSocket')
+  socket.init('eoaNewChatSocket')
+}
+const onSocketReceive = () => {
+  socket.acceptMessage = function (res) {
+    if (['event_talk_revoke', 'event_chat_online'].includes(res.event)) {
+      const findItem = dataList.value.find((item) => item.id === res.data.id)
+      if (findItem) {
+        Object.assign(findItem, { ...res.data })
+      }
+    } else if (['event_chat_talk'].includes(res.event)) {
+      const findItem = dataList.value.find((item) => {
+        if (item.type == 'friend') {
+          return item.msgTo === res.data.msgFrom
+        } else if (item.type == 'group') {
+          return item.msgTo === res.data.msgTo
+        } else if (item.type == 'discussion') {
+          return item.msgTo === res.data.msgTo
+        }
+      })
+      findItem.unreadNum = findItem.unreadNum ?? 0
+      findItem.unreadNum++
+      if (findItem.unreadNum > 99) {
+        findItem.unreadNum = 99
+      }
+    } else if (['event_chat_add_list'].includes(res.event)) {
+      // 把当前用户加入组或者聊天
+      const findItem = dataList.value.find((item) => item.id === res.data.id)
+      if (!findItem) {
+        dataList.value.unshift(res.data)
+      }
+    } else if (['event_chat_delete_list'].includes(res.event)) {
+      // 把当前用户删除群组或者聊天 或者当前用户所在群组或聊天被解散
+      const findIndex = dataList.value.findIndex((item) => (item.msgTo = res.data.msgTo))
+      if (findIndex != -1) {
+        dataList.value.splice(findIndex, 1)
+      }
+    }
+  }
+}
+onShow(() => {
+  onSocketOpen()
+  onSocketReceive()
+})
+onHide(() => {
+  socket?.closeSocket()
+})
+onMounted(() => {
+  uni.$on('chatList:unreadClear', (chatItemData) => {
+    const findItem = dataList.value.find((item) => item.id === chatItemData.id)
+    if (findItem) {
+      findItem.unreadNum = 0
+    }
+  })
+  uni.$on('chatList:reload', () => {
+    paging.value?.reload()
+  })
+})
+onBeforeUnmount(() => {
+  uni.$off('chatList:unreadClear')
+  uni.$off('chatList:reload')
+})
 </script>
 
 <style lang="scss" scoped>
@@ -222,20 +294,32 @@ const handleGo = (item) => {
     border-radius: 50%;
   }
 }
-:deep(.uni-list-chat) {
-  .uni-list-chat__badge {
-    z-index: 2;
+.listWrap {
+  :deep(.uni-list-chat) {
+    .uni-list-chat__badge {
+      z-index: 2;
+    }
+    .uni-list-chat__content-title {
+      color: #9ca3af;
+    }
+    .uni-list-chat__content-title {
+      font-size: 15px;
+    }
+    .uni-list-chat__header {
+      background-color: #eee;
+    }
   }
-  .uni-list-chat__content-title {
-    color: #9ca3af;
-  }
-  .uni-list-chat__content-title {
-    font-size: 15px;
-  }
-  .uni-list-chat__header {
-    background-color: #eee;
+  &.app {
+    :deep(.uni-list--border) {
+      &:after {
+        transform: scaleY(0.3);
+        background-color: rgba(0, 0, 0, 0.1);
+        height: 0.5px;
+      }
+    }
   }
 }
+
 :deep(.wd-popup) {
   &.wd-popup--bottom {
     bottom: 50px;

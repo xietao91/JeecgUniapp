@@ -40,7 +40,7 @@
           "<uses-feature android:name=\"android.hardware.camera\"/>",
           "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
         ],
-        "minSdkVersion": 30,
+        "minSdkVersion": 26,
         "targetSdkVersion": 30,
         "abiFilters": [
           "armeabi-v7a",
@@ -90,6 +90,10 @@
         }
       }
     },
+    "webView": {
+      "render": "always",
+      "userAgent": ""
+    },
     "compatible": {
       "ignoreVersion": true
     }
@@ -99,9 +103,11 @@
     "appid": "wx8e287639924edb51",
     "setting": {
       "urlCheck": false,
-      "minified": true
+      "minified": true,
+      "es6": true
     },
-    "usingComponents": true
+    "usingComponents": true,
+    "lazyCodeLoading": "requiredComponents"
   },
   "mp-alipay": {
     "usingComponents": true,
@@ -124,8 +130,8 @@
     "sdkConfigs": {
       "maps": {
         "amap": {
-          "key": "21f194a0d33197f874f7bbdd198419be",
-          "securityJsCode": "a46b425f31a4de445b2966d998fba851",
+          "key": "20854e7d231ee339bfa3b277c840070c",
+          "securityJsCode": "7a542edee4a82e56ed88fef8ef42b5a5",
           "serviceHost": ""
         }
       }

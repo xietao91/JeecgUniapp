@@ -4,13 +4,17 @@
   style: {
     navigationBarTitleText: '更多',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 
 <template>
   <PageLayout navTitle="更多" backRouteName="index" routeMethod="pushTab">
-    <wd-cell-group border clickable>
+    <wd-cell-group border clickable style="overflow:auto;">
       <template v-for="(item, index) in routeList" :key="index">
         <wd-cell :title="item.title" is-link @click="goPage(item)">
           <template #icon>
@@ -49,6 +53,7 @@ const isLocalConfig = getApp().globalData.isLocalConfig
 let type = 'common'
 
 const init = () => {
+  console.log('more页面：init', type)
   if (isLocalConfig) {
     routeList.value = type == 'common' ? us.data : os.data
   } else {
@@ -85,6 +90,7 @@ const goPage = (item) => {
   }
 }
 onLoad((params) => {
+  console.log('more页面：onLoad', params)
   type = params.type
   init()
 })

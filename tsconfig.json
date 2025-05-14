@@ -21,7 +21,8 @@
       "@types/wechat-miniprogram",
       "wot-design-uni/global.d.ts",
       "z-paging/types",
-      "./src/typings.d.ts"
+      "./src/typings.d.ts",
+      "./src/components/components.d.ts"
     ]
   },
   "vueCompilerOptions": {
@@ -30,6 +31,7 @@
   "exclude": ["node_modules"],
   "include": [
     "src/**/*.ts",
+	"src/**/*.uts",
     "src/**/*.js",
     "src/**/*.d.ts",
     "src/**/*.min.js",

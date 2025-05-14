@@ -29,13 +29,10 @@
       default: false,
     }
   });
-  let config = props.config;
   //定时
   const timeInterval = ref(null);
   //每天刷新
   const dayTimeInterval = ref(null);
-  //刷新
-  const refresh = ref(true);
   //定义事件
   const emit = defineEmits(['compRouter']);
   //当前星期
@@ -49,15 +46,15 @@
   });
 
   //加载数据
-  function initData() {
-    initTimeData();
+  function initData(config) {
+    initTimeData(config);
     unref(timeInterval) && clearInterval(timeInterval.value);
     timeInterval.value = setInterval(() => {
-      initTimeData();
+      initTimeData(config);
     }, 1000);
   }
   //初始化数据
-  function initTimeData(){
+  function initTimeData(config){
     let format = config.option?.format || 'YYYY-MM-DD HH:mm:ss';
     weekday.value = config.option?.showWeek == 'show' ? weekdaysConversion(dayjs().day()) : '';
     dataSource.value = format == 'day'?weekdaysConversion(dayjs().day()):dayjs(new Date()).format(format);
@@ -85,7 +82,7 @@
     }
     return {
       width: '100%',
-      height: `100px`,
+      height: `${height}px`,
       padding: props.isLowApp?`0px`:'0 10px',
       ...lowAppStyle,
     };
@@ -105,7 +102,7 @@
       fontSize: `${fontSize}px`,
       marginLeft: `${marginLeft}px`,
       marginTop: `${marginTop}px`,
-      color: '#000000',
+      color: color,
       fontWeight: `${fontWeight}`,
       textAlign: `${textAlign}`,
       letterSpacing:`${letterSpacing}px`
@@ -126,7 +123,7 @@
   }
   onMounted(() => {
    unref(timeInterval) && clearInterval(timeInterval.value);
-   initData(config);
+   initData(props.config);
   });
   //清除定时
   onUnmounted(() => {
@@ -135,6 +132,4 @@
   });
 </script>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

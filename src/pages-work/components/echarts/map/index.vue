@@ -86,11 +86,6 @@ const deepCopy = (option) => {
   // #ifdef H5
   optionDeepCopy.value = props.option;
   // #endif
-  // #ifdef MP-WEIXIN
-  nextTick(() => {
-    optionWx.value = JSON.parse(JSON.stringify(props.option));
-  });
-  // #endif
 };
 </script>
 
@@ -119,7 +114,7 @@ export default {
           this.checkEmptyData();
           window.addEventListener('resize', () => this.myChart.resize());
           this.loading = false
-        }, 300);
+        }, 1000);
       }
     },
     // 接收 ID
@@ -152,7 +147,7 @@ export default {
     // 将字符串函数转换为可调用的函数
     handleStringToFunction(option) {
       if (Object.prototype.toString.call(option) === '[object String]') {
-        option = eval("(" + option + ")");
+		option = (new Function('return ' + option))();
       }
       const recursion = (option) => {
         for (const key in option) {
@@ -160,7 +155,7 @@ export default {
             const element = option[key];
             if (Object.prototype.toString.call(element) === '[object String]' && (element.includes('function') || element.includes('=>'))) {
               try {
-                option[key] = eval("(" + element + ")");
+				option[key] = (new Function('return ' + element))();
               } catch (error) {
                 uni.showToast({
                   title: 'eval函数转换异常！',
@@ -180,7 +175,7 @@ export default {
     },
     // 检查空数据
     checkEmptyData() {
-      if (!this.option) {
+      if (!this.option || !this.option.series) {
         return;
       }
       let { series = [] } = this.option;
@@ -205,9 +200,12 @@ export default {
     } else {
       const script = document.createElement('script');
       // view 层的页面运行在 www 根目录，其相对路径相对于 www 计算
-      script.src = 'h5/static/echart/echarts.js';
+	  // #ifdef APP-PLUS
+      script.src = 'uni_modules/lime-echart/static/echarts.js';
+	  //#endif
+	  
       //#ifdef H5
-      script.src = '/h5/uni_modules/lime-echart/static/echarts.js';
+      script.src = '/uni_modules/lime-echart/static/echarts.js';
       //#endif
       script.onload = () => {
         this.initEchart();
@@ -223,13 +221,6 @@ export default {
 </script>
 
 <style lang="scss">
-//#ifdef MP-WEIXIN
-.wrap {
-  margin-top: 100px;
-  width: 100%;
-  height: 300px;
-}
-//#endif
 .component-echarts {
   .echarts {
     width: 100%;

@@ -1,11 +1,12 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <!-- #ifdef APP-PLUS || H5 -->
-<!--    <EchartsMap v-else v-model:option="option" v-model:map="mapObject" v-model:echartId="echartId" />-->
+    <!-- #ifdef H5 -->
+    <EchartsMap v-else v-model:option="option" v-model:map="mapObject" v-model:echartId="echartId" />
     <!-- #endif -->
-    <!-- #ifdef APP-PLUS || H5 || MP-WEIXIN -->
-    <echartsUniapp v-else v-model:option="option" v-model:mapName="mapName" v-model:mapData="mapObject.data"></echartsUniapp>
+
+    <!-- #ifdef MP-WEIXIN || APP-PLUS  -->
+    <echartsUniapp v-else :option="option" :mapName="mapName" :mapData="mapDataJson" :chartData="dataSource" :config="config" :id="id"></echartsUniapp>
     <!-- #endif -->
   </view>
 </template>
@@ -13,9 +14,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { echartProps } from '@/pages-work/components/echarts/props'
-import EchartsMap from "../index.vue";
+import EchartsMap from "../mapIndex.vue";
 import echartsUniapp from "../../index.vue";
-import { deepMerge, handleTotalAndUnit, disposeGridLayout } from '../../../common/echartUtil'
+import { deepMerge, handleTotalAndUnit, disposeGridLayout } from '../../../common/echartUtil';
 import useChartHook from '@/pages-work/components/hooks/useEchartMap'
 import {merge} from "lodash-es";
 import {deepClone} from "wot-design-uni/components/common/util";
@@ -117,9 +118,12 @@ async function initOption(){
 onMounted(() => {
   queryData();
 });
+defineExpose({
+  queryData
+});
 </script>
 
-<style>
+<style lang="scss"  scoped>
 .content {
   margin: 5px;
 }

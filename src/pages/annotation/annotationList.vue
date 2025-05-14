@@ -4,12 +4,22 @@
   style: {
     navigationBarTitleText: '我的消息',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 
 <template>
-  <PageLayout navTitle="我的消息" :backRouteName="backRouteName" routeMethod="pushTab">
+  <PageLayout
+    navTitle="我的消息"
+    :backRouteName="backRouteName"
+    :routeMethod="routeMethod"
+    navRightTextMp="筛选"
+    @navRightMp="() => (conditionFilter.show = true)"
+  >
     <view class="wrap">
       <z-paging ref="paging" :fixed="false" v-model="dataList" @query="queryList">
         <template v-for="(item, index) in dataList">
@@ -79,13 +89,17 @@ import { http } from '@/utils/http'
 import { useToast, useMessage, useNotify, dayjs } from 'wot-design-uni'
 import { useRouter } from '@/plugin/uni-mini-router'
 import rightConditionFilter from './components/rightConditionFilter.vue'
-
+import { useParamsStore } from '@/store/page-params'
+setTimeout(() => {
+      uni.setNavigationBarColor({
+        frontColor: '#ffffff',
+        backgroundColor: '#000000',
+      })
+    }, 1e3)
 defineOptions({
   name: 'annotationList',
   options: {
-    // apply-shared‌：当前页面样式会影响到子组件样式.(小程序)
-    // shared‌：当前页面样式影响到子组件，子组件样式也会影响到当前页面.(小程序)
-    styleIsolation: '‌apply-shared‌',
+    styleIsolation: '‌shared‌',
   },
 })
 const toast = useToast()
@@ -93,11 +107,13 @@ const router = useRouter()
 const paging = ref(null)
 const dataList = ref([])
 const starFlag = ref('')
-const conditionFilter = reactive({ show: false })
+const conditionFilter = reactive({ show: true })
 const backRouteName = ref('index')
+const routeMethod = ref('pushTab')
 // 开始时间结束时间
 const conditionStartDate = ref(null)
 const conditionEndDate = ref(null)
+const paramsStore = useParamsStore()
 const getParams = ({ pageNo, pageSize }) => {
   let result: any = {
     pageNo,
@@ -137,11 +153,9 @@ const showDetail = (record) => {
   if (record.busType == 'email') {
     goEmailDetailPage(record)
   } else if (record.busType == 'bpm') {
-    // goBpmList(record.busId)
-    toast.warning('暂未实现~')
+    goBpmList(record.busId)
   } else if (record.busType == 'bpm_task') {
-    // goBpmList(record.busId)
-    toast.warning('暂未实现~')
+    goBpmList(record.busId)
   } else {
     uni.navigateTo({
       url: '/pages/annotation/annotationDetail?item=' + encodeURIComponent(JSON.stringify(record)),
@@ -155,44 +169,39 @@ const goEmailDetailPage = (item) => {
     http.put(readUrl, { anntId: item.anntId })
   }
   uni.navigateTo({
-    url: '/pages/mail/mailDetail?id=' + item.busId,
+    url: '/pages-super/mail/mailDetail?id=' + item.busId,
   })
 }
+// 去处理流程列表
 const goBpmList = (taskId) => {
   const url = '/act/process/extActProcessNode/getProcessNodeInfo'
   let params = { taskId: taskId, datatimes: new Date().getTime() }
-  http.get(url, { params }).then((res: any) => {
-    console.log('000>>', res)
+  http.get(url, params).then((res: any) => {
     const data = res.result
+    console.log('goBpmList>>data>>', data)
     if (data.taskIsHandel == true) {
       toast.show('任务已经处理完成!')
     } else {
       let params = {
         id: taskId,
         taskId: taskId,
-        isSignTask: data.isSignTask,
-        taskDefKey: data.taskDefKey,
         instanceId: data.records.BPM_INST_ID,
-        pageCur: 'peoplelis',
       }
       console.log('goBpmList***********params>>', params)
-      // #ifdef APP-PLUS
-      router.replaceAll({ name: 'index', params })
-      // #endif
-      // #ifndef APP-PLUS
-      let url = `/pages/index/index?pageCur=peoplelis&id=${taskId}&taskId=${taskId}&isSignTask=${data.isSignTask}&taskDefKey=${data.taskDefKey}&instanceId=${data.records.BPM_INST_ID}`
-      uni.reLaunch({
-        url: url,
+      paramsStore.setPageParams('myTaskDetail', {
+        data: params,
       })
-      // #endif
+      router.push({
+        name: 'myTaskDetail',
+      })
     }
   })
 }
 
 const handleFilterChange = ([flag, startTime, endTime]) => {
   starFlag.value = flag
-  startTime && (conditionStartDate.value = startTime)
-  endTime && (conditionEndDate.value = endTime)
+  conditionStartDate.value = startTime
+  conditionEndDate.value = endTime
   paging.value.reload()
 }
 // 收藏与取消收藏
@@ -217,10 +226,12 @@ const changeStarFlag = (item) => {
 // 滑动删除
 const handleAction = (flag, item) => {
   http
-    .delete('/sys/sysAnnouncementSend/delete', { id: item.sendId })
+    .delete(`/sys/sysAnnouncementSend/delete?id=${item.sendId}`)
     .then((res: any) => {
       if (res.success) {
         paging.value.reload()
+      } else {
+        toast.warning(res.message)
       }
     })
     .catch((e) => {
@@ -250,10 +261,14 @@ onLoad((options) => {
   if (options?.backRouteName) {
     backRouteName.value = options.backRouteName
   }
+  if (options?.routeMethod) {
+    routeMethod.value = options.routeMethod
+  }
 })
 </script>
 
 <style lang="scss" scoped>
+@import '../../static/iconfont/iconfont.css';
 //
 .wrap {
   height: 100%;
@@ -266,7 +281,7 @@ onLoad((options) => {
 .list {
   padding: 14px 14px;
   background-color: #fff;
-  border-bottom: 1px solid #eee;
+  //border-bottom: 1px solid #eee;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -298,7 +313,7 @@ onLoad((options) => {
   }
   .operate {
     text-align: right;
-    width: 70px;
+    width: 74px;
     .u-iconfont {
       font-size: 20px;
       margin-bottom: 8px;
@@ -327,4 +342,67 @@ onLoad((options) => {
     }
   }
 }
+// #ifdef MP-WEIXIN
+:deep(.wd-cell-group) {
+  width: 150px;
+  .wd-cell {
+    &.title {
+      .wd-cell__title {
+        font-size: 17px;
+      }
+    }
+  }
+  .wd-cell__wrapper {
+    align-items: center;
+    .wd-cell__right {
+      flex: 0.5;
+    }
+    .wd-radio {
+      margin-top: 0;
+    }
+  }
+  .uni-calendar__header-text {
+    font-size: 16px !important;
+  }
+  .wd-cell {
+    &.date {
+      &:last-child {
+        .wd-cell__wrapper {
+          border-bottom: 1px solid rgba(232, 232, 232, 0.5);
+        }
+      }
+      .wd-cell__wrapper {
+        .wd-calendar__value {
+          margin-right: 0;
+          text-align: center;
+        }
+        .wd-input::after {
+          display: none;
+        }
+        .wd-icon-arrow-right {
+          display: none;
+        }
+        .wd-calendar__cell {
+          padding: 0;
+        }
+        .wd-cell__left {
+          display: none;
+        }
+        .wd-cell__right {
+          flex: 1;
+        }
+        .wd-cell__value {
+          display: flex;
+          align-items: center;
+          .wd-picker {
+            --wot-cell-wrapper-padding: 0;
+            --wot-cell-padding: 0;
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+}
+// #endif
 </style>

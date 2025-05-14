@@ -11,11 +11,19 @@ import {
 import {
   fieldMappings
 } from '../common/concants'
-import { china } from '../common/china'
 import {isFunction, isUrl} from '@/utils/is'
 import { http } from '@/utils/http'
 import { useToast, useMessage, useNotify, dayjs } from 'wot-design-uni'
 import {isArray} from "@/common/is";
+import {useUserStore} from "@/store";
+import signMd5Utils from '@/utils/signMd5Utils'
+
+/**
+ *
+ * @param props
+ * @param initOption
+ * @param echarts
+ */
 export default function useChartHook(props, initOption?, echarts?) {
   const config = props.config
   const dataSource = ref([])
@@ -24,6 +32,8 @@ export default function useChartHook(props, initOption?, echarts?) {
     show: true,
     status: 0, // 0:loading,1:暂无数据,2:网络超时
   })
+  //关联组件刷新
+  let refreshComp = inject<any>('refreshComp');
   const toast = useToast()
   //地图数据
   const areaCode = ref('')
@@ -70,7 +80,8 @@ export default function useChartHook(props, initOption?, echarts?) {
    * @param queryParams
    */
   function queryData(compConfig?, queryParams?) {
-    let config = compConfig ? compConfig : { ...props.config }
+    let config = compConfig ? compConfig : { ...props.config };
+    console.log("queryData*****>>>>>",queryParams)
     if (config.dataType == 2) {
       //判断是否走代理
       if (config.dataSetId && config.dataSetType == 'api' && config.dataSetIzAgent !== '1') {
@@ -78,16 +89,18 @@ export default function useChartHook(props, initOption?, echarts?) {
         let { url, dataMap } = handleParam(config)
         //TODO 联动钻取处理
         let linkParams = {}
-        queryParams = Object.assign({}, dataMap, queryParams, linkParams)
+        let params = Object.assign({}, dataMap, queryParams, linkParams)
         if (url.startsWith('#{api_base_path}') || url.startsWith('{{ domainURL }}')) {
-          getAgentData(queryParams, config)
+          getAgentData(params, config)
         } else {
           let checkUrl = checkUrlPrefix(url)
           if (checkUrl.isDiffProtocol) {
             toast.warning('请求API地址需要https协议接口！')
             return
           }
-          getCompData({ url, queryParams }).then((res: any) => {
+          console.log("api请求地址",url, params)
+          getCompData({ url, params }).then((res: any) => {
+            console.log("api请求地址  返回值res",res)
             dataSource.value = res.data || res
             if (res?.result && isArray(res?.result)) {
               dataSource.value = res.result
@@ -98,13 +111,13 @@ export default function useChartHook(props, initOption?, echarts?) {
           })
         }
       }else if (config.dataSetType == 'websocket'){
-
+        //TODO websocket处理
       }else {
         let { dataMap } = handleParam(config)
         //TODO 联动钻取处理
         let linkParams = {}
-        queryParams = Object.assign({}, dataMap, queryParams, linkParams)
-        getAgentData(queryParams,config);
+        let params = Object.assign({}, dataMap, queryParams, linkParams)
+        getAgentData(params,config);
       }
     } else if (config.dataType == 4) {
       //查询配置
@@ -163,17 +176,26 @@ export default function useChartHook(props, initOption?, echarts?) {
       //使用服务端代理是传递option到代理服务器
       params = option;
     }
+    console.info('请求api---method', method);
+    console.info('请求api---params', params);
+    console.info('请求api---url', url);
+    const userStore = useUserStore()
     return new Promise((resolve, reject) => {
       uni.request({
         method: method,
-        params: params,
+        data: params,
+        header: {
+          'X-Access-Token': userStore.userInfo.token,
+          'X-Tenant-Id': userStore.userInfo.tenantId,
+          'X-TIMESTAMP': signMd5Utils.getTimestamp(),
+        },
         transformRequest: [
           function (data) {
             //格式化为字符串。
             return JSON.stringify({ ...data });
           },
         ],
-        url: url,
+        url: option.url,
       })
       .then((res) => {
         resolve(res.data);
@@ -333,9 +355,88 @@ export default function useChartHook(props, initOption?, echarts?) {
       },
     }
   }
-
+  /**
+   * 点击事件
+   * @param obj
+   */
+  function handleClick(obj) {
+    //**********************跳转配置************************************************
+    const turnConfig = props.config.turnConfig;
+    const config = props.config;
+    const linkType = props.config.linkType;
+    const token = userStore.userInfo.token;
+    if (turnConfig ) {
+      if(linkType && linkType  !== 'url'){
+        return
+      }
+      let { url,type:openType } = turnConfig;
+      if (url) {
+        if (url && url.indexOf('${name}') > -1) {
+          url = url.replace('${name}', obj.name);
+        }
+        if (url && url.indexOf('${value}') > -1) {
+          url = url.replace('${value}', obj.value);
+        }
+        if (url && url.indexOf('${type}') > -1) {
+          url = url.replace('${type}', obj.type);
+        }
+        if (url && url.indexOf('${token}') > -1) {
+          url = url.replace('${token}', token);
+        }
+        console.info('跳转地址:', url);
+        //#ifdef H5
+        if (url && url.indexOf('http') > -1) {
+          window.open(url, openType || '_blank');
+        }
+        // #endif
+      }
+    }
+    //**********************联动配置begin************************************************
+    const linkageConfig = props.config.linkageConfig;
+    //1.判断联动配置是否存在
+    if (linkageConfig && linkageConfig.length > 0) {
+      //2.点击图表的字段映射转换 TODO 表单有两种方式获取
+      let fields = fieldTransform(config.dataMapping);
+      //3.将数据处理配置项成需求的格式[{id:'123,params:{sex:'1'.age:2}]}]
+      let linkageParams = linkageConfig.map((item) => {
+        let paramsObj = {};
+        item.linkage.forEach((field) => {
+          let hasMap = fields && Object.keys(fields).length > 0;
+          //获取点击的对象的数值
+          paramsObj[field.target] = hasMap ? obj[fields[field.source]] : obj[field.source];
+        });
+        return { id: item.linkageId, params: paramsObj };
+      });
+      refreshComp && refreshComp(linkageParams);
+      //**********************联动配置end************************************************
+    }
+  }
+  /**
+   * 联动点击数据字段转换
+   * @param dataMapping
+   */
+  function fieldTransform(dataMapping) {
+    if (dataMapping) {
+      //执行字段转换
+      let obj: any = {};
+      dataMapping.forEach((data) => {
+        if (data['mapping']) {
+          if (data['filed'] == '分组') {
+            obj[data['mapping']] = 'type';
+          }
+          if (data['filed'] == '维度' || data['filed'] == '名称') {
+            obj[data['mapping']] = 'name';
+          }
+          if (data['filed'] == '数值') {
+            obj[data['mapping']] = 'value';
+          }
+        }
+      });
+      return obj;
+    }
+  }
   return [
     { dataSource, reload, pageTips, config, chartOption, mapDataJson },
-    { queryData },
+    { queryData,handleClick },
   ]
 }

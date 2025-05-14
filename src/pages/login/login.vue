@@ -3,6 +3,10 @@
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: '',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -65,7 +69,7 @@
           </view>
         </view>
         <view class="btn-area text-center">
-          <wd-button custom-class="mr-30px align-top" :loading="loading" @click="hanldeLogin">
+          <wd-button  custom-class="login align-top" :loading="loading" @click="hanldeLogin">
             {{ loading ? '登录...' : '登录' }}
           </wd-button>
           <wd-button v-if="loginWay == 2" plain hairline @click="toggleLoginWay(1)">
@@ -126,7 +130,8 @@ const compLogo = ref(defLogo)
 const compTitle = ref('Jeecg Uniapp')
 const paramsStore = useParamsStore()
 paramsStore.reset()
-let isLocalConfig = true
+// 是否开启本地路由配置
+let isLocalConfig = getApp().globalData.isLocalConfig;
 if (import.meta.env.MODE === 'development') {
   userName.value = 'admin'
   password.value = '123456'
@@ -217,6 +222,8 @@ const accountLogin = () => {
           tenantId: userInfo.loginTenantId,
           localStorageTime: +new Date(),
         })
+        appConfig()
+        departConfig()
         router.pushTab({ path: HOME_PAGE })
       } else {
         toast.warning(res.message)
@@ -263,6 +270,7 @@ const phoneLogin = () => {
         })
         //获取app配置
         appConfig()
+        departConfig()
       } else {
         toast.warning(res.message)
       }
@@ -271,6 +279,22 @@ const phoneLogin = () => {
       let msg = err.message || '请求出现错误，请稍后再试'
       toast.warning(msg)
     })
+}
+//部門配置
+const departConfig = () => {
+  const appQueryUser = () => {
+    http
+      .get('/sys/user/appQueryUser', {
+        username:userStore.userInfo.username,
+      })
+      .then((res: any) => {
+        if (res.success && res.result.length) {
+          let result = res.result[0];
+          userStore.editUserInfo({orgCodeTxt: result.orgCodeTxt})
+        }
+      })
+  }
+  appQueryUser()
 }
 const appConfig = () => {
   if (isLocalConfig) {
@@ -390,6 +414,9 @@ if (isLocalConfig === false) {
     }
   }
   .btn-area {
+    :deep(.login) {
+      margin-right: 30px;
+    }
     :deep(.wd-button) {
       --wot-button-medium-height: 41px;
       --wot-button-medium-fs: 16px;

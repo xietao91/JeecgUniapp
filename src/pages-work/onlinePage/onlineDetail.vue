@@ -3,7 +3,11 @@
   layout: 'default',
   style: {
     navigationStyle: 'custom',
-    navigationBarTitleText: 'Online表单新增',
+    navigationBarTitleText: 'Online表单详情',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -29,6 +33,8 @@
 import OnlineLoader from '@/components/online/online-loader.vue'
 import router from '@/router'
 import {onLoad} from "@dcloudio/uni-app";
+import {getRefPromise} from "@/utils";
+import { isMp, isH5 } from '@/utils/platform'
 // 定义响应式数据
 const tableName = ref('');
 const navTitle = ref('');
@@ -44,9 +50,16 @@ const initForm = (item) => {
   navTitle.value = `表单【${item.desformName}】`
   // 数据ID
   dataId.value = item.id
-  nextTick(() => {
-    online.value.loadByTableName(tableName.value)
+  let delay = 0
+  if (isH5 === false) {
+    // 小程序端需要延时下，否则不显示
+    delay = 1000
+  }
+ setTimeout(() => {
+  getRefPromise(online).then(() => {
+    online.value?.loadByTableName(item.dataId, item.desformCode)
   })
+ }, delay)
 }
 
 const backRoute = () => {

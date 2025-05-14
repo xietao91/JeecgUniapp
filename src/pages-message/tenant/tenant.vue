@@ -4,12 +4,21 @@
   style: {
     navigationBarTitleText: '',
     navigationStyle: 'custom',
-    styleIsolation: 'apply-shared',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 <template>
-  <PageLayout :navTitle="title" backRouteName="message" routeMethod="pushTab">
+  <PageLayout
+    :navTitle="title"
+    backRouteName="message"
+    routeMethod="pushTab"
+    navRightTextMp="筛选"
+    @navRightMp="() => (conditionFilter.show = true)"
+  >
     <wd-tabs customClass="" v-model="tabActive">
       <template v-for="(item, index) in tabList" :key="index">
         <wd-tab :title="item.title" :name="item.key">

@@ -1,14 +1,15 @@
 <template>
   <view class="PopupDict">
-    <view @click.stop="handleClick">
+    <view class="inputArea" :class="{ clear: !!showText }" @click.stop="handleClick">
       <wd-select-picker
         v-model="showText"
         :columns="options"
         readonly
         :type="multi ? 'checkbox' : 'radio'"
-        @click="() => (reportModal.show = true)"
+        @click="handleClick"
         v-bind="$attrs"
       ></wd-select-picker>
+      <view v-if="!!showText && !disabled" class="u-iconfont u-icon-close" @click.stop="handleClear"></view>
     </view>
     <popupReportModal
       v-if="reportModal.show"
@@ -29,8 +30,8 @@ import popupReportModal from '@/components/Popup/components/popupReportModal.vue
 defineOptions({
   name: 'PopupDict',
   options: {
-    styleIsolation: 'shared'
-  }
+    styleIsolation: 'shared',
+  },
 })
 const props = defineProps({
   dictCode: {
@@ -49,6 +50,11 @@ const props = defineProps({
   spliter: {
     type: String,
     default: ',',
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+    required: false,
   },
 })
 const emit = defineEmits(['change', 'update:modelValue'])
@@ -171,8 +177,19 @@ function callBack(rows) {
     emit('update:modelValue', result)
   })
 }
+
+// 清空
+const handleClear = () => {
+  if (!props.disabled) {
+    showText.value = ''
+    handleChange([])
+  }
+}
+
 const handleClick = () => {
-   reportModal.show = true
+  if (!props.disabled) {
+    reportModal.show = true
+  }
 }
 const handleClose = () => {
   reportModal.show = false
@@ -183,4 +200,20 @@ const handleChange = (data) => {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.inputArea {
+  position: relative;
+  .u-icon-close {
+    position: absolute;
+    right: 15px;
+    top: calc(14px + 4px);
+    color: #585858;
+    font-size: 15px;
+  }
+  &.clear {
+    :deep(.wd-input__body) {
+      padding-right: 20px;
+    }
+  }
+}
+</style>

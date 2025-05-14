@@ -1,4 +1,22 @@
 <template>
+  <!-- 带搜索  -->
+  <!-- #ifndef MP-WEIXIN -->
+  <wd-select-picker
+    :label-width="labelWidth"
+    :label="label"
+    type="radio"
+    filterable
+    v-model="selected"
+    :columns="options"
+    :disabled="disabled"
+    :show-confirm="false"
+    placeholder="请选择"
+    @change="handleChange"
+  ></wd-select-picker>
+  <!-- #endif -->
+
+  <!-- #ifdef MP-WEIXIN -->
+  <!-- 常规下拉  -->
   <wd-picker
     :label-width="labelWidth"
     :label="label"
@@ -7,14 +25,16 @@
     :columns="options"
     :disabled="disabled"
     placeholder="请选择"
-    @change="handleChange"
+    @confirm="handleChange"
   ></wd-picker>
+  <!-- #endif -->
 </template>
 
-<script setup>
+<script lang="ts" setup>
 import { ref, watch, onMounted } from 'vue'
 import { isArray, isString } from 'lodash'
-import {http} from "@/utils/http"; // 假设使用 lodash 来判断类型
+import { http } from '@/utils/http'
+import { isNullOrUnDef } from '@/utils/is'
 
 // 定义 props
 const props = defineProps({
@@ -48,7 +68,7 @@ const props = defineProps({
     default: '',
     required: false,
   },
-  value: {
+  modelValue: {
     type: [String, Number],
     required: false,
   },
@@ -60,11 +80,11 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['input', 'change', 'update:value'])
+const emit = defineEmits(['input', 'change', 'update:modelValue'])
 
 // 定义响应式数据
-const selected = ref('请选择')
-const options = ref([])
+const selected = ref<any>('')
+const options = ref<any>([])
 
 // 初始化选项
 const initSelections = async () => {
@@ -75,23 +95,27 @@ const initSelections = async () => {
       temp = encodeURI(props.dictStr)
     }
     try {
-      const res = await http.get('/sys/dict/getDictItems/' + temp)
+      const res: any = await http.get('/sys/dict/getDictItems/' + temp)
       if (res.success) {
-        options.value = res.result;
+        options.value = (res.result ?? []).filter((item) => item !== null)
       }
     } catch (error) {
       console.error('请求数据出错:', error)
     }
-  }
-  else {
+  } else {
     if (!props.dict || props.dict.length === 0) {
       return
     }
     if (isString(props.dict)) {
       try {
-        const res = await http.get('/sys/dict/getDictItems/' + props.dict)
+        let code = props.dict;
+        if (code.indexOf(',') > 0 &&  code.indexOf(' ') > 0) {
+          // 编码后类似sys_user%20where%20username%20like%20xxx' 是不包含空格的,这里判断如果有空格和逗号说明需要编码处理
+          code = encodeURI(code);
+        }
+        const res: any = await http.get('/sys/dict/getDictItems/' + code)
         if (res.success) {
-          options.value = res.result;
+          options.value = res.result
         }
       } catch (error) {
         console.error('请求数据出错:', error)
@@ -105,20 +129,23 @@ const initSelections = async () => {
 }
 
 // 选择器改变事件处理函数
-const handleChange = (e) => {
-  emit('update:value', selected.value);
-  emit('change', selected.value);
+const handleChange = ({value}) => {
+  emit('update:modelValue', value)
+  emit('change', value)
 }
 
 // 监听 dict 和 value 的变化
-watch(() => props.dict, () => {
-    initSelections();
-});
+watch(
+  () => props.dict,
+  () => {
+    initSelections()
+  },
+)
 // 监听 value 的变化
 watch(
-  () => props.value,
+  () => props.modelValue,
   (val) => {
-      selected.value = !val? [] : props.value;
+    selected.value = isNullOrUnDef(props.modelValue) ? '' : val
   },
   { immediate: true },
 )
@@ -129,4 +156,8 @@ onMounted(() => {
 })
 </script>
 
-<style></style>
+<style lang="scss" scoped>
+:deep(.wd-checkbox__shape) {
+  border-radius: 0 !important;
+}
+</style>

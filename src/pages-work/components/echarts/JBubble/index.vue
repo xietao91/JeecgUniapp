@@ -1,7 +1,7 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-	<echartsUniapp v-else :option="option"></echartsUniapp>
+	<echartsUniapp v-else :option="option" :chartData="dataSource" :config="config" :id="id" ></echartsUniapp>
   </view>
 </template>
 
@@ -129,9 +129,11 @@ function getDataset(chartData) {
 onMounted(()=>{
 	queryData();
 })
-
+defineExpose({
+  queryData
+});
 </script>
-<style>
+<style scoped>
 .content {
   padding: 10px;
 }

@@ -4,16 +4,29 @@
   style: {
     navigationBarTitleText: '',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 
 <template>
-  <PageLayout navTitle="编辑资料" backRouteName="people" routeMethod="pushTab">
+  <PageLayout navTitle="编辑资料" backRouteName="userDetail">
     <wd-form custom-class="pt3" ref="form" :model="model">
       <wd-cell-group border>
         <wd-input
-          label="用户名"
+          label="姓名："
+          prop="realname"
+          clearable
+          label-width="70px"
+          v-model="model.realname"
+          placeholder="请输入姓名"
+          :rules="[{ validator: rules.realname }]"
+        />
+        <wd-input
+          label="用户名："
           prop="username"
           clearable
           label-width="70px"
@@ -21,43 +34,40 @@
           :readonly="true"
           placeholder="请输入用户名"
         />
-        <wd-input
-          label="名称"
-          prop="realname"
-          clearable
-          label-width="70px"
-          v-model="model.realname"
-          placeholder="请输入用户名"
-          :rules="[{ validator: rules.realname }]"
-        />
-        <wd-cell title="头像">
+        <wd-cell title="头像：">
           <avatar v-model="model.avatar"></avatar>
         </wd-cell>
-        <wd-select-picker
-          label="性别"
-          type="radio"
-          v-model="model.sex"
-          :columns="columns"
-          title="请选择性别"
-          :safe-area-inset-bottom="false"
-        ></wd-select-picker>
+        <view class="pt15px pb15px">
+          <wd-select-picker
+            label="性别："
+            type="radio"
+            v-model="model.sex"
+            :columns="columns"
+            title="请选择性别"
+            :safe-area-inset-bottom="false"
+          ></wd-select-picker>
+        </view>
+        <view class="phone">
+          <wd-input
+            label="手机号："
+            prop="phone"
+            clearable
+            label-width="70px"
+            v-model="model.phone"
+            placeholder="请输入手机号"
+            :rules="[{ validator: rules.phone }]"
+          />
+          <view class="box">
+            <view class="num">+86</view>
+            <view class="text">中国大陆</view>
+          </view>
+        </view>
         <wd-input
-          label="手机号"
-          prop="phone"
-          clearable
-          label-width="70px"
-          v-model="model.phone"
-          :readonly="true"
-          placeholder="请输入手机号"
-          :rules="[{ validator: rules.phone }]"
-        />
-        <wd-input
-          label="邮箱"
+          label="邮箱："
           prop="email"
           clearable
           label-width="70px"
           v-model="model.email"
-          :readonly="true"
           placeholder="请输入邮箱"
           :rules="[{ validator: rules.email }]"
         />
@@ -75,6 +85,7 @@ import { useToast, useMessage, useNotify, dayjs } from 'wot-design-uni'
 import { useRouter } from '@/plugin/uni-mini-router'
 import { useUserStore } from '@/store/user'
 import avatar from './components/avatar.vue'
+import { getFileAccessHttpUrl } from '@/common/uitls'
 
 defineOptions({
   name: 'chatList',
@@ -92,7 +103,7 @@ const columns = [
 const model = reactive({
   username: userStore.userInfo.username,
   realname: userStore.userInfo.realname,
-  avatar: userStore.userInfo.avatar,
+  avatar: getFileAccessHttpUrl(userStore.userInfo.avatar),
   sex: userStore.userInfo.sex ?? 1,
   phone: userStore.userInfo.phone,
   email: userStore.userInfo.email,
@@ -176,13 +187,91 @@ function handleSubmit() {
 
 <style lang="scss" scoped>
 //
-:deep(.wd-cell) {
+:deep(.wd-cell-group) {
+  --wot-input-color: var(--color-grey);
+  --wot-cell-value-color: var(--color-grey);
+  background-color: transparent !important;
+  --wot-cell-title-color: var(--UI-FG-0);
+  .wd-input__label {
+    --wot-cell-title-color: var(--UI-FG-0);
+  }
   .wd-cell__left {
+    color: var(--UI-FG-0);
+  }
+  .wd-select-picker__cell {
+    --wot-cell-wrapper-padding: 14px;
+  }
+  .wd-select-picker {
+    // margin: 15px 0;
+  }
+  .wd-cell-group__body {
+    background-color: transparent;
+  }
+}
+:deep(.wd-cell) {
+  .wd-cell__wrapper {
+    align-items: center;
+  }
+  .wd-cell__left {
+    display: flex;
+    align-items: center;
     width: 70px;
     flex: none;
   }
   .wd-cell__value {
     text-align: left;
+  }
+}
+.phone {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  .wd-input {
+    flex: 1;
+  }
+  .box {
+    margin-left: 10px;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    .num {
+      color: #fff;
+      background-color: var(--wot-color-theme);
+      border-top-left-radius: 3px;
+      border-bottom-left-radius: 3px;
+      font-size: 12px;
+      height: 24px;
+      line-height: 24px;
+      padding: 0 8px;
+    }
+    .text {
+      position: relative;
+      color: var(--wot-color-theme);
+      font-size: 12px;
+      height: 24px;
+      line-height: 24px;
+      padding: 0 8px;
+      border-top-right-radius: 6px;
+      border-bottom-right-radius: 6px;
+      min-width: 70px;
+      &::before {
+        content: ' ';
+        width: 200%;
+        height: 200%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: 1px solid currentColor;
+        -webkit-transform: scale(0.5);
+        transform: scale(0.5);
+        -webkit-transform-origin: 0 0;
+        transform-origin: 0 0;
+        box-sizing: border-box;
+        border-radius: inherit;
+        z-index: 1;
+        pointer-events: none;
+      }
+    }
   }
 }
 </style>

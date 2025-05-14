@@ -1,13 +1,13 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <echartsUniapp v-else :option="option"></echartsUniapp>
+    <echartsUniapp v-else :option="option" :chartData="dataSource" :config="config" :id="id" ></echartsUniapp>
   </view>
 </template>
 
 <script lang="ts" setup>
 import { echartProps } from '@/pages-work/components/echarts/props'
-import { deepMerge, handleTotalAndUnit, disposeGridLayout } from '../../common/echartUtil'
+import {deepMerge, handleTotalAndUnit, disposeGridLayout, setLegendTop, commonOption} from '../../common/echartUtil'
 import { isNumber } from '@/utils/is'
 import useChartHook from '@/pages-work/components/hooks/useEchart'
 import { deepClone } from '@/uni_modules/da-tree/utils'
@@ -20,9 +20,42 @@ const props = defineProps({
 })
 
 //最终图表配置项
-const option = ref({})
+const option = ref({});
+//图表option
+let chartOption: any = {
+  title: {
+    show: true,
+  },
+  card: {
+    title: '33',
+  },
+  xAxis: {
+    type: 'value',
+    data: [],
+    axisLabel:{
+      formatter:function(value, index){
+        return value;
+      }
+    }
+  },
+  yAxis: {
+    type: 'category',
+    nameTextStyle: {
+      align:"right"
+    },
+    axisLabel:{
+      formatter:function(value, index){
+        return value;
+      }
+    },
+    axisLine: {
+      show: true
+    }
+  },
+  series: [{}],
+};
 //图表数据查询
-let [{ dataSource, reload, pageTips, config, chartOption }, { queryData }] = useChartHook(
+let [{ dataSource, reload, pageTips, config }, { queryData }] = useChartHook(
   props,
   initOption,
 )
@@ -59,6 +92,9 @@ function initOption(data) {
     // 合并配置
     if (props.config && config.option) {
       merge(chartOption, config.option)
+      setLegendTop(chartOption, config)
+      chartOption['tempData'] = chartData;
+      chartOption = commonOption(chartOption, config)
       chartOption = handleTotalAndUnit(props.compName, chartOption, config, chartData)
       chartOption = disposeGridLayout(props.compName, chartOption, config, chartData)
       option.value = deepClone(chartOption)
@@ -73,8 +109,11 @@ function initOption(data) {
 onMounted(() => {
   queryData()
 })
+defineExpose({
+  queryData
+});
 </script>
-<style>
+<style scoped>
 .content {
   padding: 10px;
 }

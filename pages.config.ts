@@ -5,8 +5,8 @@ export default defineUniPages({
     navigationStyle: 'default',
     navigationBarTitleText: 'uniapp',
     navigationBarBackgroundColor: '#f8f8f8',
-    navigationBarTextStyle: 'black',
-    backgroundColor: '#FFFFFF',
+    navigationBarTextStyle: 'white',
+    backgroundColor: '#000000',
   },
   easycom: {
     autoscan: true,
@@ -38,12 +38,12 @@ export default defineUniPages({
         pagePath: 'pages/index/index',
         text: '协作',
       },
-	  {
-	    iconPath: 'static/tabbar/tabbar-workHome-2.png',
-	    selectedIconPath: 'static/tabbar/tabbar-workHome.png',
-	    pagePath: 'pages/workHome/index',
-	    text: '工作台',
-	  },
+	  // {
+	  //   iconPath: 'static/tabbar/tabbar-workHome-2.png',
+	  //   selectedIconPath: 'static/tabbar/tabbar-workHome.png',
+	  //   pagePath: 'pages-super/flow/flowIndex',
+	  //   text: '审批',
+	  // },
       {
         iconPath: 'static/tabbar/tabbar-user-2.png',
         selectedIconPath: 'static/tabbar/tabbar-user.png',

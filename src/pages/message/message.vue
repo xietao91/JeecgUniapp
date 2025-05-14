@@ -4,6 +4,10 @@
   style: {
     navigationBarTitleText: '',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -20,8 +24,16 @@
       <wd-tabs :customClass="getClass()" v-model="tabActive">
         <template v-for="(item, index) in tabList" :key="index">
           <wd-tab :title="item.title" :name="item.key">
-            <chatList v-if="item.key === '1'"></chatList>
-            <addressBookList v-if="item.key === '2'"></addressBookList>
+            <view class="flow" @click="handleGo">
+              <view class="content">
+                <view class="cuIcon-roundcheck"></view>
+                <view class="text">流程待办</view>
+              </view>
+            </view>
+            <view class="mainContent">
+              <chatList v-if="item.key === '1'"></chatList>
+              <addressBookList v-if="item.key === '2'"></addressBookList>
+            </view>
           </wd-tab>
         </template>
       </wd-tabs>
@@ -30,9 +42,13 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import chatList from './components/chatList.vue'
 import addressBookList from './components/addressBookList.vue'
 import { platform, isMp } from '@/utils/platform'
+import { useRouter } from '@/plugin/uni-mini-router'
+import { useParamsStore } from '@/store/page-params'
+
 defineOptions({
   name: 'message',
   options: {
@@ -41,7 +57,9 @@ defineOptions({
     styleIsolation: '‌shared‌',
   },
 })
-import { ref } from 'vue'
+
+const paramsStore = useParamsStore()
+const router = useRouter()
 const globalData = getApp().globalData
 const { systemInfo, navHeight } = globalData
 const { statusBarHeight } = systemInfo
@@ -54,6 +72,12 @@ const tabActive = ref<string>('1')
 const getClass = () => {
   return `${platform} ${isMp ? 'mp' : ''}`
 }
+const handleGo = () => {
+  paramsStore.setPageParams('flowIndex', {
+    backRouteName: 'message',
+  })
+  router.push({ name: 'flowIndex' })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -61,18 +85,18 @@ const getClass = () => {
   height: 100%;
 }
 :deep(.wd-tabs) {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
   &.mp {
     .wd-tabs__nav-container {
-      padding-right: 7%;
+      padding-right: 87px;
     }
   }
   .wd-tabs__nav {
-    background: linear-gradient(45deg, #0081ff, #1cbbb4);
     height: var(--nav-height);
     padding-top: var(--status-bar-height);
+    background: linear-gradient(45deg, #0081ff, #1cbbb4);
     .wd-tabs__nav-item {
       color: #fff;
     }
@@ -91,10 +115,36 @@ const getClass = () => {
 :deep(.wd-tab) {
   .wd-tab__body {
     position: absolute;
-    height: 100%;
-    width: 100%;
     top: 0;
     left: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
   }
+}
+.flow {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 5px;
+  background: #fff;
+  box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.1);
+  .content {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    padding-left: 15px;
+    font-size: 16px;
+    color: #666;
+    background-color: #f8f8f8;
+  }
+  .text {
+    margin-left: 6px;
+    color: #333;
+  }
+}
+.mainContent {
+  flex: 1;
+  overflow: hidden;
 }
 </style>

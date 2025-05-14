@@ -22,7 +22,7 @@
     <!--下载-->
     <template v-else-if="column?.scopedSlots?.customRender === 'fileSlot'">
       <template v-if="record[column.dataIndex]">
-        <wd-button @click="handleDownload(record[column.dataIndex])">下载</wd-button>
+        <wd-button @click.stop="handleDownload(record[column.dataIndex])">下载</wd-button>
       </template>
       <template v-else>
         <text>无文件</text>
@@ -38,13 +38,28 @@
       </template>
     </template>
     <template v-else-if="column?.scopedSlots?.customRender === 'pcaSlot'">
-      <text class="ellipsis-2">{{ getPcaText(record[column.dataIndex]) || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}}</text>
+      <text class="ellipsis-2">
+        {{
+          getPcaText(record[column.dataIndex]) ||
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        }}
+      </text>
     </template>
     <template v-else-if="column?.scopedSlots?.customRender === 'dateSlot'">
-      <text class="ellipsis-2">{{ getFormatDate(record[column.dataIndex], column) || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}}</text>
+      <text class="ellipsis-2">
+        {{
+          getFormatDate(record[column.dataIndex], column) ||
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        }}
+      </text>
     </template>
     <template v-else>
-      <text class="ellipsis-2">{{ renderVal(record, column) || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' }}</text>
+      <text class="ellipsis-2">
+        {{
+          renderVal(record, column) ||
+          '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        }}
+      </text>
     </template>
   </view>
 </template>
@@ -54,6 +69,7 @@ import { getFormatDate, filterMultiDictText } from '../utils/index'
 import { isString } from '@/utils/is'
 import { getFileAccessHttpUrl } from '@/common/uitls'
 import { getAreaTextByCode } from '@/common/areaData/Area'
+import { downloadFile } from '@/common/uitls';
 defineOptions({
   name: 'onlineTableCell',
   options: {
@@ -80,15 +96,7 @@ const imgPreview = ref({
 })
 // 下载
 const handleDownload = (text) => {
-  uni.downloadFile({
-    url: text,
-    success: (res) => {
-      if (res.statusCode === 200) {
-        console.log('下载成功')
-        console.log(res);
-      }
-    },
-  })
+  downloadFile(text)
 }
 // 省市区
 const getPcaText = (code) => {
@@ -121,6 +129,12 @@ const renderVal = (record, column) => {
     }
     if (text.length > 10) {
       return text.substring(0, 10)
+    }
+    return text
+  } else if (fieldType == 'link_table') {
+    const dict = record[dataIndex + '_dictText']
+    if (dict != undefined) {
+      return record[dataIndex + '_dictText']
     }
     return text
   } else if (['popup_dict'].includes(column['fieldType'])) {

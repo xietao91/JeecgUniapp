@@ -28,7 +28,7 @@ export default function useUpload<T = string>(
       success: (res) => {
         loading.value = true
         const tempFilePath = res.tempFiles[0].tempFilePath
-        const fileName = res.type
+        const fileName = res.tempFiles[0].name || res.tempFiles[0].tempFilePath.substring(tempFilePath.lastIndexOf('/') + 1)
         formData.fileName = fileName;
         uploadFile<T>({ url, tempFilePath, formData, data, error, loading, fileName })
       },
@@ -46,7 +46,7 @@ export default function useUpload<T = string>(
       success: (res) => {
         loading.value = true
         const tempFilePath = res.tempFilePaths[0]
-        const fileName = res.tempFiles[0].name
+        const fileName = res.tempFiles[0].name || tempFilePath.substring(tempFilePath.lastIndexOf('/') + 1)
         formData.fileName = fileName;
         uploadFile<T>({ url, tempFilePath, formData, data, error, loading })
       },
@@ -66,7 +66,7 @@ function uploadFile<T>({ url, tempFilePath, formData, data, error, loading }) {
   uni.uploadFile({
     url: url ?? VITE_UPLOAD_BASEURL,
     filePath: tempFilePath,
-    name: 'file',
+    name: formData.name ?? 'file',
     formData,
     header: {
       'X-Access-Token': userStore.userInfo.token,

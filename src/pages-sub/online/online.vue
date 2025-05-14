@@ -4,6 +4,10 @@
   style: {
     navigationBarTitleText: 'online',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -30,7 +34,7 @@
         <template v-for="(item, index) in dataList" :key="item.id">
           <template v-if="item.tableType != 3">
             <wd-swipe-action>
-              <view class="list" @click="handleGo(item)">
+              <view class="list" :data-tableName="item.tableName" @click="handleGo(item)">
                 <view
                   class="cIcon"
                   :style="{ 'background-color': getBackgroundColor(item, index) }"
@@ -77,6 +81,7 @@ const paging = ref(null)
 const dataList: any = ref([])
 const keyword = ref('')
 const itemBgColor = []
+const message = useMessage()
 // 接口拿到的数据处理之后的
 
 const handleGo = (item) => {
@@ -97,33 +102,47 @@ function handleSearch() {
   queryList(1, 10)
 }
 const handleAction = (val, item) => {
-  if (val == 'del') {
-    http
-      .delete('/online/cgform/head/delete', { id: item })
-      .then((res: any) => {
-        if (res.success) {
-          toast.success('删除成功~')
-          paging.value.reload()
-        } else {
-          toast.warning('删除失败~')
-        }
+  if (val === 'del') {
+    message
+      .confirm({
+        msg: '同时删除数据库表，不可恢复！',
+        title: '提示',
       })
-      .catch((res) => {
-        toast.error('删除失败~')
+      .then(() => {
+        http
+          .delete(`/online/cgform/head/delete?id=${item.id}`)
+          .then((res: any) => {
+            if (res.success) {
+              toast.success('删除成功~')
+              paging.value.reload()
+            } else {
+              toast.warning('删除失败~')
+            }
+          })
+          .catch((res) => {
+            toast.error('删除失败~')
+          })
       })
-  } else if ((val = 'remove')) {
-    http
-      .delete('/online/cgform/head/removeRecord', { id: item })
-      .then((res: any) => {
-        if (res.success) {
-          toast.success('移除成功~')
-          paging.value.reload()
-        } else {
-          toast.warning('移除失败~')
-        }
+  } else if (val === 'remove') {
+    message
+      .confirm({
+        msg: '只删除表单配置，数据库表保留！',
+        title: '提示',
       })
-      .catch((res) => {
-        toast.error('移除失败~')
+      .then(() => {
+        http
+          .delete(`/online/cgform/head/removeRecord?id=${item.id}`)
+          .then((res: any) => {
+            if (res.success) {
+              toast.success('移除成功~')
+              paging.value.reload()
+            } else {
+              toast.warning('移除失败~')
+            }
+          })
+          .catch((res) => {
+            toast.error('移除失败~')
+          })
       })
   }
 }
@@ -133,6 +152,7 @@ const getParams = ({ pageNo, pageSize }) => {
     pageSize,
     order: 'desc',
     column: 'createTime',
+    copyType: 0,
   }
   if (keyword.value.length) {
     params.tableTxt = `*${keyword.value}*`
@@ -185,7 +205,7 @@ for (let i = 0; i < 50; i++) {
 :deep(.wd-search) {
   border-bottom: 1px solid #f4f2f2;
 }
-.wd-swipe-action {
+:deep(.wd-swipe-action) {
   &:first-child {
     margin-top: 10px;
   }

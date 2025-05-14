@@ -5,6 +5,10 @@
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: '首页',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -25,15 +29,17 @@
     </swiper>
     <scroll-view class="scrollView" :scroll-y="true" scroll-with-animation>
       <!--流程服务-->
-      <!--      <wd-row>-->
-      <!--        <wd-col :span="12" v-for="(item, index) in middleApps" :key="index">-->
-      <!--          <wd-img :width="50" :height="50" :src="getFileAccessHttpUrl(item.icon)"></wd-img>-->
-      <!--          <view class="textBox">-->
-      <!--            <wd-text :text="item.title"></wd-text>-->
-      <!--            <wd-text :text="item.subTitle"></wd-text>-->
-      <!--          </view>-->
-      <!--        </wd-col>-->
-      <!--      </wd-row>-->
+      <wd-row>
+        <wd-col :span="12" v-for="(item, index) in middleApps" :key="index">
+          <view class="box" @click="goTo(item.routeIndex)">
+            <wd-img :width="50" :height="50" :src="getFileAccessHttpUrl(item.icon)"></wd-img>
+            <view class="textBox">
+              <wd-text :text="item.title"></wd-text>
+              <wd-text :text="item.subTitle"></wd-text>
+            </view>
+          </view>
+        </wd-col>
+      </wd-row>
       <!--常用服务-->
       <view class="serveBox">
         <view class="title">
@@ -55,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import {nextTick, ref} from 'vue'
 import { TestEnum } from '@/typings'
 import { us, os } from '@/common/work'
 // 获取当前运行平台
@@ -88,7 +94,7 @@ const toast = useToast()
 const router = useRouter()
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
-const isLocalConfig = getApp().globalData.isLocalConfig
+const isLocalConfig = getApp().globalData.isLocalConfig;
 const carouselList = ref([])
 const swiperList = ref([])
 const middleApps = ref([])
@@ -124,9 +130,9 @@ const goPage = (item) => {
       })
     } else {
       if (!hasRoute({ name: page })) {
-        router.replace({ name: 'demo', params: { backRouteName: 'index' } })
+        router.replace({ name: 'demo', params: { backRouteName: 'index', routeMethod: 'pushTab' } })
       } else {
-        router.replace({ name: page, params: { backRouteName: 'index' } })
+        router.replace({ name: page, params: { backRouteName: 'index', routeMethod: 'pushTab' } })
       }
     }
   }
@@ -149,18 +155,57 @@ const getAppConfigRoute = () => {
     })
   }
 }
-const homeConfig = () => {
-  var indexRouteList = cache(APP_ROUTE)
-  var appConfig = cache(APP_CONFIG)
-  usList.value = indexRouteList.filter((item) => item.type == 'common')
-  osList.value = indexRouteList.filter((item) => item.type == 'other')
-  middleApps.value = indexRouteList.filter((item) => item.type == 'approve')
-  let carouselImgStr = appConfig[0].carouselImgJson
-  var carouselImgArr = carouselImgStr && carouselImgStr.length > 0 ? carouselImgStr.split(',') : []
-  carouselList.value = carouselImgArr
+//跳转路由
+const goTo = (name) => {
+  router.push({ name })
+}
+//加载首页配置
+const homeConfig = async () => {
+  const indexRouteList = cache(APP_ROUTE);
+  const appConfig = cache(APP_CONFIG);
+  nextTick(() => {
+    usList.value = indexRouteList.filter((item) => item.type == 'common').map(item=>{
+      return {
+        ...item,
+        text: item.title,
+        img: item.icon,
+        itemKey: item.routeIndex,
+      };
+    });
+    osList.value = indexRouteList.filter((item) => item.type == 'other').map(item=>{
+      return {
+        ...item,
+        text: item.title,
+        img: item.icon,
+        itemKey: item.routeIndex,
+      };
+    });
+    middleApps.value = indexRouteList.filter((item) => item.type == 'approve').map(item=>{
+      return {
+        ...item,
+        text: item.title,
+        img: item.icon,
+        itemKey: item.routeIndex,
+      };
+    });
+    let carouselImgStr = appConfig[0].carouselImgJson;
+    const carouselImgArr = carouselImgStr && carouselImgStr.length > 0 ? carouselImgStr.split(',') : [];
+    carouselList.value = carouselImgArr;
+    usList.value.push({
+      text: '更多',
+      img: '/static/index/128/more.png',
+      routeIndex: 'common',
+      itemKey: 'common',
+    })
+    osList.value.push({
+      text: '更多',
+      img: '/static/index/128/more.png',
+      routeIndex: 'other',
+      itemKey: 'other',
+    })
+  })
 }
 const goPageMore = (page) => {
-  // router.replace({ path: `/pages/more/more`, query: { type: page } })
   router.replace({ name: 'more', params: { backRouteName: 'index', type: page } })
 }
 onLoad(() => {
@@ -186,14 +231,14 @@ if (isLocalConfig) {
   usList.value.push({
     text: '更多',
     img: '/static/index/128/more.png',
-    routeIndex: 'other',
-    itemKey: 'other',
+    routeIndex: 'common',
+    itemKey: 'common',
   })
   osList.value.push({
     text: '更多',
     img: '/static/index/128/more.png',
-    routeIndex: 'common',
-    itemKey: 'common',
+    routeIndex: 'other',
+    itemKey: 'other',
   })
   middleApps.value = [
     {
@@ -274,24 +319,26 @@ if (isLocalConfig) {
     background-color: #fff;
     margin-bottom: 32upx;
     .wd-col {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      &:first-child {
-        border-right: 1px solid rgba(165, 165, 165, 0.1);
-      }
-      .wd-img {
-        margin: 20upx;
-        margin-left: 0;
-      }
-      .textBox {
-        text-align: center;
+      .box {
         display: flex;
-        flex-direction: column;
-        .wd-text {
-          color: #666;
-          &:last-child {
-            font-weight: 200;
+        align-items: center;
+        justify-content: center;
+        &:first-child {
+          border-right: 1px solid rgba(165, 165, 165, 0.1);
+        }
+        .wd-img {
+          margin: 20upx;
+          margin-left: 0;
+        }
+        .textBox {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          .wd-text {
+            color: #666;
+            &:last-child {
+              font-weight: 200;
+            }
           }
         }
       }

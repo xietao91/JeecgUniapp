@@ -1,7 +1,7 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-	  <echartsUniapp v-else :option="option"></echartsUniapp>
+	  <echartsUniapp v-else :option="option" :chartData="dataSource" :config="config" :id="id" ></echartsUniapp>
   </view>
 </template>
 
@@ -35,8 +35,6 @@ let chartOption: any = {
   yAxis: {
     type: 'category',
     inverse: false,
-    animationDuration: 300,
-    animationDurationUpdate: 300,
     nameTextStyle: {
       align:"right"
     },
@@ -49,10 +47,6 @@ let chartOption: any = {
     dimensions: [],
     source: [],
   },
-  animationDuration: 0,
-  animationDurationUpdate: 2000,
-  animationEasing: 'linear',
-  animationEasingUpdate: 'linear',
 };
 //图表数据查询
 let [{ dataSource, reload, pageTips, config }, { queryData }] = useChartHook(
@@ -152,9 +146,11 @@ function getDataSet(chartData) {
 onMounted(()=>{
 	queryData();
 })
-
+defineExpose({
+  queryData
+});
 </script>
-<style>
+<style scoped>
 .content {
   padding: 10px;
 }

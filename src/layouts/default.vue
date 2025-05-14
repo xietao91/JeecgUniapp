@@ -1,9 +1,9 @@
 <template>
   <wd-config-provider :themeVars="themeVars">
     <slot />
-    <!-- <wd-toast />
+    <wd-toast />
     <wd-message-box />
-    <wd-notify /> -->
+    <wd-notify />
   </wd-config-provider>
   
 </template>

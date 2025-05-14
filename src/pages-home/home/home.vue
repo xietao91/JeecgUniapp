@@ -3,6 +3,10 @@
   layout: 'default',
   style: {
     navigationBarTitleText: '',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>

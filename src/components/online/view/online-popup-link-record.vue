@@ -12,6 +12,7 @@
     </view>
     <LinkRecordsModal
       v-if="reportModal.show"
+      :selected="value"
        ref="lrmRef"
       :dictCode="dictCode"
       :dictTable="dictTable"
@@ -30,7 +31,7 @@ import { useToast } from 'wot-design-uni'
 import LinkRecordsModal from './link-records-modal.vue'
 import {http} from "@/utils/http";
 defineOptions({
-  name: 'onlinePopupLinkRecord.vue',
+  name: 'onlinePopupLinkRecord',
   options: {
     styleIsolation: 'shared',
   },
@@ -46,7 +47,7 @@ const props = defineProps({
   },
   disabled: {
     type: Boolean,
-    default: true,
+    default: false,
     required: false,
   },
   required: {
@@ -117,7 +118,7 @@ function loadValue(){
     superQueryParams: encodeURI(JSON.stringify(superQueryParams))
   };
   let titleField = props.formSchema?.dictText && props.formSchema?.dictText.split(",")[0];
-  http.get(`/online/cgform/api/getData/${dictTable.value}`,param).then(res=>{
+  http.get(`/online/cgform/api/getData/${dictTable.value}`,param).then((res:any)=>{
     if(res.success){
       let selectedList = res.result.records || [];
       let labels = [];
@@ -156,7 +157,7 @@ function callBack(rows) {
 }
 //点击事件
 const handleClick = () => {
-  if (!attrs.disabled) {
+  if (!props.disabled) {
     reportModal.show = true
     //lrmRef.value.beforeOpen(selectVal.value)
   }

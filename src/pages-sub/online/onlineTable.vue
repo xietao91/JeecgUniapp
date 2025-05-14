@@ -4,12 +4,16 @@
   style: {
     navigationBarTitleText: '',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 
 <template>
-  <PageLayout backRouteName="online" navTitle="online在线表单">
+  <PageLayout backRouteName="onlineCard" :navTitle="navTitle">
     <wd-table :index="tableIndex" :data="dataList" @row-click="handleRow">
       <template v-for="(item, index) in columns" :key="item.prop">
         <wd-table-col
@@ -56,6 +60,7 @@ import { useRouter } from '@/plugin/uni-mini-router'
 import { useUserStore } from '@/store/user'
 import { useParamsStore } from '@/store/page-params'
 import onlineTableCell from './components/onlineTableCell.vue'
+import {ref} from "vue";
 defineOptions({
   name: 'onlineTable',
   options: {
@@ -76,6 +81,7 @@ const tableIndex = ref(false)
 const pageNo = ref(1)
 const pageSize = ref(10)
 const pageTotal = ref(1)
+const navTitle = ref('online在线表单')
 let pageParams: any = {}
 let rowIndex: any = ref(0)
 // 底部操作
@@ -108,7 +114,7 @@ const getColumns = () => {
       if (len == 1) {
         space = 2
       }
-      const width = safeArea.width / (len > maxShowColumn ? maxShowColumn : len) - space
+      const width = safeArea.width / (len >= maxShowColumn ? maxShowColumn : len) - space
       columns.value = data.map((item) => {
         return {
           ...item,
@@ -125,7 +131,9 @@ const getColumns = () => {
         if (res.success) {
           if (res.result?.columns?.length) {
             columnsInfo.value = res.result
-            analysis(res.result.columns)
+            setTimeout(() => {
+              analysis(res.result.columns)
+            }, 0);
           }
         } else {
           toast.warning(res.message)
@@ -166,7 +174,12 @@ const handleGo = () => {
 const handleEdit = (record) => {
   router.push({
     name: 'onlineEdit',
-    params: { desformCode: pageParams.tableName, desformName: pageParams.tableTxt, id: record.id },
+    params: {
+      desformCode: pageParams.tableName,
+      desformName: pageParams.tableTxt,
+      dataId: record.id,
+      backRouteName: 'onlineTable',
+    },
   })
 }
 //go 编辑页
@@ -219,6 +232,8 @@ const init = () => {
 init()
 
 onMounted(() => {
+  //标题
+  navTitle.value = pageParams?.tableTxt ||  'online在线表单';
   // 监听刷新列表事件
   uni.$on('refreshList', () => {
     getData()
@@ -251,7 +266,7 @@ onMounted(() => {
 :deep(.wd-table) {
   --wot-table-font-size: 14px;
   .wd-table__body {
-    --wot-table-color: var(--color-gray);
+    --wot-table-color: var(--color-grey);
   }
 }
 </style>

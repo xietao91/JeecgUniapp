@@ -1,10 +1,10 @@
 
 // 移动端不支持自定义表达式设置的默认值
-import {formatDate} from "@/utils";
 import {http} from "@/utils/http";
 import {useUserStore} from "@/store";
+import * as CustomExpression from './customExpression';
+import dayjs from "dayjs";
 
-const CustomExpression = {}
 // 获取所有用户自定义表达式的Key
 const ceKeys = Object.keys(CustomExpression)
 // 将key用逗号拼接，可以拼接成方法参数，例：a,b,c --> function(a,b,c){}
@@ -205,14 +205,13 @@ async function executeRegExp(defVal, regExp, execFun, otherParams = []) {
 
 /** 执行【普通表达式】#{xxx} */
 async function executeNormalExpression(expression, origin) {
-  let temp = new Date();
   switch (expression) {
     case 'date':
-      return formatDate(temp, 'yyyy-MM-dd');
+      return dayjs().format('YYYY-MM-DD');
     case 'time':
-      return formatDate(temp, 'HH:mm:ss');
+      return dayjs().format('HH:mm:ss');
     case 'datetime':
-      return formatDate(temp, 'yyyy-MM-dd HH:mm:ss');
+      return dayjs().format('YYYY-MM-DD HH:mm:ss');
     default:
       // 获取当前登录用户的信息
       let result = getUserInfoByExpression(expression)
@@ -244,20 +243,26 @@ function getUserInfoByExpression(expression) {
   }
   return null
 }
-
+/**
+ * 2023-09-04
+ * liaozhiyang
+ * 用new Function替换eval
+ */
+function _eval(str: string) {
+  return new Function(`return ${str}`)();
+}
 /** 执行【用户自定义表达式】 {{xxx}} 移动端不支持 */
 async function executeCustomExpression(expression, origin) {
-	return expression;
   // 利用 eval 生成一个方法，这个方法的参数就是用户自定义的所有的表达式
-/*  let fn = eval(`(function (${ceJoin}){ return ${expression} })`)
+  let fn = _eval(`(function (${ceJoin}){ return ${expression} })`);
   try {
     // 然后调用这个方法，并把表达式传递进去，从而完成表达式的执行
     return fn.apply(null, $CE$)
   } catch (e) {
     // 执行失败，输出错误并返回原始值
-    logError(e)
+    logWarn(e)
     return origin
-  } */
+  }
 }
 
 /** 执行【填值规则表达式】 ${xxx} */

@@ -9,6 +9,10 @@ export const X_Low_App_ID = 'X-Low-App-ID'
 export const TENANT_LIST = 'tenant_list'
 export const ROUTE_PARAMS = "cacheRouteParams"
 export const HOME_PAGE = "/pages/message/message"
+/**
+ * 组件名称前缀
+ */
+export const COMP_NAME_PREFIX = 'jeecg-drag';
 //首页配置项缓存时间10分钟
 export const HOME_CONFIG_EXPIRED_TIME = 10*60
 export const phone = '---'
@@ -70,6 +74,7 @@ export const compList = [
  	"JStackBar",
  	"JMultipleBar",
  	"JNegativeBar",
+ 	"JProgress",
 
  	"JLine",
  	"JMultipleLine",

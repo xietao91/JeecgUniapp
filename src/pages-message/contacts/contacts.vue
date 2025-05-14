@@ -4,6 +4,10 @@
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: '联系人',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -21,18 +25,21 @@
         <template #top>
           <wd-search
             hide-cancel
-            placeholder="我要去哪里？"
+            placeholder="请输入姓名"
             v-model="keyword"
             @search="handleSearch"
             @clear="handleClear"
           />
         </template>
-        <view class="wraper">
-          <wd-index-bar sticky v-if="dataSource.length">
-            <view v-for="item in dataSource" :key="item.index">
+        <view :class="{ wraper: true, small: height < 700 }">
+          <wd-index-bar v-if="dataSource.length">
+            <view
+              :class="{ box: true, emptyContent: !item.data.length }"
+              v-for="item in dataSource"
+              :key="item.index"
+            >
               <wd-index-anchor :index="item.index" />
               <wd-cell
-                border
                 clickable
                 v-for="inItem in item.data"
                 :key="item.username"
@@ -85,7 +92,7 @@ import { cache, getFileAccessHttpUrl, hasRoute } from '@/common/uitls'
 import vPinyin from '../common/vue-py'
 import rightConditionFilter from '@/components/RightConditionFilter/RightConditionFilter.vue'
 import { TENANT_LIST } from '@/common/constants'
-import defaultAvatar from '@/static/default-avatar.png';
+import defaultAvatar from '@/static/default-avatar.png'
 
 const toast = useToast()
 const userStore = useUserStore()
@@ -98,7 +105,8 @@ const originData = ref([])
 const keyword = ref('')
 const dataSource = ref([])
 const conditionFilter = reactive({ show: false, checked: '', options: [] })
-
+const systemInfo = getApp().globalData.systemInfo
+const { height } = systemInfo.safeArea
 const queryList = (pageNo, pageSize) => {
   const pararms = { pageNo, pageSize, tenantId: conditionFilter.checked }
   if (conditionFilter.checked === '') delete pararms.tenantId
@@ -106,7 +114,8 @@ const queryList = (pageNo, pageSize) => {
     .get('/sys/user/appQueryUser', pararms)
     .then((res: any) => {
       if (res.success && res.result.length) {
-        paging.value.complete(res.result)
+        let result = res.result
+        paging.value.complete(result)
       } else {
         paging.value.complete(false)
       }
@@ -120,9 +129,18 @@ watch(dataList, () => {
   let result = handleResult(dataList.value)
   result = transformData(result)
   result.sort((a, b) => a.index.localeCompare(b.index))
+  result = fillAZIndexes(result)
   originData.value = [...result]
-  dataSource.value = result
-  console.log('dataSource:::', dataSource.value)
+  if (keyword.value) {
+    let searchData = []
+    originData.value.forEach((item) => {
+      let data = item.data.filter((inItem) => inItem.realname.indexOf(keyword.value) != -1)
+      searchData.push({ index: item.index, data })
+    })
+    dataSource.value = searchData
+  } else {
+    dataSource.value = originData.value
+  }
 })
 
 // 搜索
@@ -130,11 +148,12 @@ function handleSearch() {
   dataSource.value = []
   nextTick(() => {
     if (keyword.value) {
-      dataSource.value = originData.value.filter((item) => {
-        return item.data.some((inItem) => {
-          return inItem.realname.indexOf(keyword.value) != -1
-        })
+      let searchData = []
+      originData.value.forEach((item) => {
+        let data = item.data.filter((inItem) => inItem.realname.indexOf(keyword.value) != -1)
+        searchData.push({ index: item.index, data })
       })
+      dataSource.value = searchData
     } else {
       dataSource.value = originData.value
     }
@@ -203,9 +222,24 @@ const handleResult = (arr) => {
   })
   return newArr
 }
+const fillAZIndexes = (data) => {
+  // 生成A-Z的字母数组
+  const allIndexes = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))
 
+  // 将原始数据转换为以index为键的对象
+  const dataMap = {}
+  data.forEach((item) => {
+    dataMap[item.index] = item.data
+  })
+
+  // 遍历所有字母，生成完整数据
+  return allIndexes.map((letter) => ({
+    index: letter,
+    data: dataMap[letter] || [], // 存在则用原始数据，否则用空数组
+  }))
+}
 onLoad(() => {
-  const tenantList = cache(TENANT_LIST)
+  const tenantList = cache(TENANT_LIST) ?? []
   const result = tenantList?.map((item) => {
     return { key: item.id, title: item.name }
   })
@@ -216,8 +250,18 @@ onLoad(() => {
 <style lang="scss" scoped>
 .wrap {
   height: 100%;
+  .emptyContent {
+    display: none;
+  }
+  .small {
+    :deep(.wd-index-bar__index) {
+      font-size: 11px;
+      padding-top: 2px;
+      padding-bottom: 3px;
+    }
+  }
 }
-.z-paging-content {
+:deep(.z-paging-content) {
   // :deep(.zp-paging-container) {
   //   flex: none;
   //   height: calc(100% - 42px);
@@ -225,6 +269,9 @@ onLoad(() => {
   //     height: 100%;
   //   }
   // }
+  .zp-l-container-rpx {
+    opacity: 0;
+  }
 }
 :deep(.avatar) {
   border-radius: 50%;

@@ -1,6 +1,6 @@
 <template>
   <view class="list-container" :style="styleObject">
-    <wd-table :data="dataSource"  :ellipsis="true" :height="300">
+    <wd-table :data="dataSource" :ellipsis="true" height="300px">
       <template v-for="(item, index) in columns" :key="index" >
         <wd-table-col :prop="item.dataIndex" :label="item.title" :width="item.width" />
       </template>
@@ -12,6 +12,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { echartProps } from '../props';
 import useChartHook from '@/pages-work/components/hooks/useEchart'
+import {cloneDeep} from "lodash-es";
 // 定义 props
 const props = defineProps(echartProps);
 // 使用 mixin
@@ -43,7 +44,7 @@ function initOption (data){
     }
     //计算列宽
     columns.value = showCol.map((item) => {
-      item['width'] = '100px';
+      item['width'] = showCol.length<3?'200px':'150px';
       item['ellipsis'] = true;
       return item;
     });
@@ -52,8 +53,9 @@ function initOption (data){
     let chartData = props.config.chartData;
     chartData = typeof chartData === 'string' ? JSON.parse(chartData) : chartData;
     if (chartData && chartData.length > 0) {
-      columns.value = Object.keys(chartData[0]).map((item) => {
-        return { title: item, dataIndex: item, izTotal: 'N' };
+      let keys = Object.keys(chartData[0]);
+      columns.value = keys.map((item) => {
+        return { title: item, dataIndex: item, izTotal: 'N', width: keys.length<3?'200px':'150px'};
       });
     }
   }

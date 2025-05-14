@@ -3,7 +3,9 @@
 declare global {
   type IResData<T> = {
     code: number
-    msg: string
+    success: boolean
+    message: string
+    result: T
     data: T
   }
 
@@ -24,9 +26,12 @@ declare global {
     welcome?: string
     avatar?: string
     tenantId?: string | number
+    loginTenantId?: string | number
     sex?: number
     phone?: string
     email?: string
+    birthday?: string
+    orgCode?: string
     /** 微信的 openid，非微信没有这个字段 */
     openid?: string
     // 存到本地的时间戳

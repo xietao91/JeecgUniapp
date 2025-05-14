@@ -4,6 +4,10 @@
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: '个人',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -16,7 +20,10 @@
     </view>
     <view class="info-area shadow-warp mb-5">
       <view class="user">
-        <wd-text custom-class="title" :text="personalList.username"></wd-text>
+        <wd-text
+          custom-class="title"
+          :text="personalList.realname ? personalList.realname : realname"
+        ></wd-text>
         <view class="tag">
           <view class="cuIcon-people mr-1"></view>
           <wd-text text="用户"></wd-text>
@@ -78,6 +85,7 @@ const personalList = reactive({
   depart: '',
 })
 const userId = ref(userStore.userInfo.userid)
+const realname = ref(userStore.userInfo.realname)
 const id = ref('')
 let stopWatch: any = null
 const api = {
@@ -88,12 +96,11 @@ const api = {
   uploadUrl: `${getEnvBaseUrl()}/sys/common/upload`,
 }
 const dataSource = [
-  { key: 'collect', title: '收藏', class: 'cuIcon-favorfill text-yellow' },
-  { key: 'redPacket', title: '红包', class: 'cuIcon-redpacket_fill text-red' },
+  { key: 'organization', title: '组织', class: 'cuIcon-taoxiaopu text-cyan' },
   { key: 'scan', title: '扫码', class: 'cuIcon-scan text-red' },
   { key: 'location', title: '定位', class: 'cuIcon-location text-cyan' },
   { key: 'setttings', title: '设置', class: 'cuIcon-settingsfill text-cyan' },
-  { key: 'exit', title: '退出', class: 'cuIcon-exit text-cyan' },
+  { key: 'exit', title: '退出', class: 'cuIcon-exit text-yellow' },
 ]
 
 const load = () => {
@@ -139,7 +146,6 @@ const getpost = (code) => {
 }
 
 const ChooseImage = (params) => {
-  uni.showLoading({ title: '上传中...' })
   const { loading, data, error, run } = useUpload({ name: 'file' }, { url: api.uploadUrl })
   if (stopWatch) stopWatch()
   run()
@@ -148,7 +154,7 @@ const ChooseImage = (params) => {
     ([loading, err, data], oldValue) => {
       if (loading == false) {
         if (err) {
-          toast.warning('修改失败')
+          // toast.warning('修改失败')
           uni.hideLoading()
         } else {
           if (data) {
@@ -230,8 +236,11 @@ const handleCell = (item) => {
     case 'location':
       router.push({ name: 'location' })
       break
+    case 'organization':
+      router.push({ name: 'organization' })
+      break
     case 'setttings':
-      router.push({ name: 'userEdit' })
+      router.push({ name: 'userDetail' })
       break
     case 'exit':
       exit()
@@ -275,8 +284,8 @@ onLoad(() => {
   padding: 30upx;
   background-color: #fff;
   color: #8799a3;
-  :deep(.wd-text) {
-    color: var(--color-gray);
+  :deep(.wd-text.is-default) {
+    color: var(--color-grey);
   }
   .user,
   .job {
@@ -288,7 +297,7 @@ onLoad(() => {
       display: flex;
       align-items: center;
     }
-    .wd-text.title {
+    :deep(.wd-text.title) {
       font-size: 18px;
       min-height: 18px;
       margin-bottom: 16upx;
@@ -296,12 +305,12 @@ onLoad(() => {
   }
   .user {
     border-right: 0.5px solid rgba(0, 0, 0, 0.1);
-    .wd-text.title {
+    :deep(.wd-text.title) {
       color: #f37b1d;
     }
   }
   .job {
-    .wd-text.title {
+    :deep(.wd-text.title) {
       color: #39b54a;
     }
   }
@@ -313,7 +322,7 @@ onLoad(() => {
   --wot-cell-line-height: 32px;
   .wd-cell {
     --wot-cell-title-fs: 15px;
-    --wot-cell-title-color: var(--color-gray);
+    --wot-cell-title-color: var(--color-grey);
     .wd-cell__left {
       font-size: 15px;
     }

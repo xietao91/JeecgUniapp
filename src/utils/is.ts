@@ -108,8 +108,16 @@ export function isUrl(path: string): boolean {
 }
 
 /**
+ * URL地址
+ * @param {*} s
+ */
+export function isURL (s) {
+  return /^http[s]?:\/\/.*/.test(s)
+}
+
+/**
  * 转换成真实审批地址
- * 
+ *
  * @param path
  * @param token
  * @param domainUrl
@@ -121,7 +129,6 @@ export function getBpmFormUrl(path: string, token:string, domainUrl:string, task
   console.log("DOMAIN_URL = ",domainUrl)
   console.log("TASKID = ",taskId)
   // URL支持{{ window.xxx }}占位符变量
-  //let URL = (props.path || '').replace(/{{([^}}]+)?}}/g, (s1, s2) => eval(s2));
   if(path){
     path = path.replace("{{TOKEN}}", token);
     path = path.replace("{{DOMAIN_URL}}", domainUrl);

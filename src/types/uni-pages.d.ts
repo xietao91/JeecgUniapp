@@ -14,16 +14,24 @@ interface NavigateToOptions {
        "/pages/demo/selectPicker" |
        "/pages/demo/tree" |
        "/pages/login/login" |
+       "/pages/login/loginOauth2" |
        "/pages/message/message" |
        "/pages/more/more" |
        "/pages/user/people" |
-       "/pages/workHome/index" |
+       "/pages/workHome/workHome" |
        "/pages-home/home/home" |
        "/pages-message/chat/chat" |
+       "/pages-message/chat/chatSetting" |
        "/pages-message/contacts/contacts" |
+       "/pages-message/moreFunction/moreFunction" |
+       "/pages-message/myGroup/addGroup" |
+       "/pages-message/myGroup/groupPage" |
+       "/pages-message/myGroup/myGroup" |
        "/pages-message/personPage/personPage" |
        "/pages-message/tenant/tenant" |
        "/pages-user/location/location" |
+       "/pages-user/organization/organization" |
+       "/pages-user/userDetail/userDetail" |
        "/pages-user/userEdit/userEdit" |
        "/pages-work/dragPage/index" |
        "/pages-work/onlinePage/onlineAdd" |
@@ -36,7 +44,7 @@ interface NavigateToOptions {
 interface RedirectToOptions extends NavigateToOptions {}
 
 interface SwitchTabOptions {
-  url: "/pages/message/message" | "/pages/index/index" | "/pages/workHome/index" | "/pages/user/people"
+  url: "/pages/message/message" | "/pages/index/index" | "/pages/user/people"
 }
 
 type ReLaunchOptions = NavigateToOptions | SwitchTabOptions;

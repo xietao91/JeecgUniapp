@@ -29,5 +29,23 @@ export const echartProps = {
     appId:{
         type: String,
         default: ''
-    }
+    },
+    size: {
+        type: Object,
+        default: () => {
+        }
+    },
+    params: {
+        type: Object,
+        default: () => {
+        }
+    },
+    pid: {
+        type: String,
+        default: ''
+    },
+    tabId: {
+        type: String,
+        default: ''
+    },
 }

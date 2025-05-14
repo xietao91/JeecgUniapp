@@ -13,8 +13,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { isArray, isString } from 'lodash'
+import { ref, watch, onMounted } from 'vue';
+import { isArray, isString } from 'lodash';
 import {http} from "@/utils/http"; // 假设使用 lodash 来判断类型
 
 // 定义 props
@@ -49,7 +49,7 @@ const props = defineProps({
 		default: '',
 		required: false,
 	},
-	value: {
+  modelValue: {
 		type: [Array, String],
 		required: false,
 	},
@@ -61,7 +61,7 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['input', 'change', 'update:value'])
+const emit = defineEmits(['change', 'update:modelValue'])
 
 // 定义响应式数据
 const selected = ref([]);
@@ -90,7 +90,12 @@ const initSelections = async () => {
 		}
 		if (isString(props.dict)) {
 			try {
-				const res = await http.get('/sys/dict/getDictItems/' + props.dict)
+        let code = props.dict;
+        if (code.indexOf(',') > 0 &&  code.indexOf(' ') > 0) {
+          // 编码后类似sys_user%20where%20username%20like%20xxx' 是不包含空格的,这里判断如果有空格和逗号说明需要编码处理
+          code = encodeURI(code);
+        }
+				const res = await http.get('/sys/dict/getDictItems/' + code)
 				if (res.success) {
 					options.value = res.result
 				}
@@ -103,36 +108,38 @@ const initSelections = async () => {
 			})
 		}
 	}
-	console.log("options.value ",options.value )
 }
 
 // 选择器改变事件处理函数
-const handleChange = (e) => {
-	let value = "";
-	if (selected.value && isArray(selected.value)) {
-		value = selected.value.join(',')
+const handleChange = ({value}) => {
+  let valueStr='';
+	if (value && isArray(value)) {
+    valueStr = value.join(',')
 	}
-	emit('update:value', value);
-	emit('change', value);
+	emit('update:modelValue', valueStr);
+  emit('change', valueStr);
 }
 
 // 监听 dict 和 value 的变化
 watch(() => props.dict, () => {
 	initSelections();
 });
-// 监听 value 的变化
-watch(
-		() => props.value,
-		(val) => {
-			selected.value = !val? [] : val.split(',');
-		},
-		{ immediate: true },
-)
-
+// 监听value 的变化
+watchEffect(()=>{
+  props.modelValue && initVal()
+})
+//初始化数值
+function initVal(){
+  selected.value = isString(props.modelValue)?  props.modelValue.split(',') :[];
+}
 // 组件挂载时初始化选项
 onMounted(() => {
 	initSelections()
 })
 </script>
 
-<style></style>
+<style lang="scss" scoped>
+  :deep(.wd-checkbox__shape){
+    border-radius:0 !important;
+  }
+</style>

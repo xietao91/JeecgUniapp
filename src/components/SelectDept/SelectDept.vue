@@ -1,6 +1,6 @@
 <template>
   <view class="CategorySelect">
-    <view @click="handleClick">
+    <view class="pickerArea" :class="{ clear: !!showText }" @click.stop="handleClick">
       <wd-input
         :placeholder="getPlaceholder($attrs)"
         v-bind="$attrs"
@@ -8,8 +8,9 @@
         clearable
         readonly
       ></wd-input>
+      <view v-if="!!showText  && !disabled" class="u-iconfont u-icon-close" @click.stop="handleClear"></view>
     </view>
-    <wd-popup position="bottom" v-model="popupShow">
+    <wd-popup v-if="popupShow" position="bottom" v-model="popupShow">
       <view class="content">
         <view class="operation">
           <view class="cancel text-gray-5" @click.stop="cancel">取消</view>
@@ -24,6 +25,7 @@
             :showCheckbox="multiple"
             :showRadioIcon="false"
             :checkStrictly="true"
+            :defaultCheckedKeys="defaultCheckedKeys"
             :loadApi="asyncLoadTreeData"
             @change="handleTreeChange"
           ></DaTree>
@@ -60,6 +62,11 @@ const props = defineProps({
     type: String,
     default: 'title',
   },
+  disabled: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 })
 const emit = defineEmits(['change', 'update:modelValue'])
 const toast = useToast()
@@ -71,8 +78,11 @@ const showText = ref('')
 const popupShow = ref(false)
 const treeData = ref<any[]>([])
 const treeValue = ref([])
+const defaultCheckedKeys: any = ref(props.multiple ? [] : '')
 const handleClick = () => {
-  popupShow.value = true
+  if (!props.disabled) {
+    popupShow.value = true
+  }
 }
 const cancel = () => {
   popupShow.value = false
@@ -85,9 +95,7 @@ const confirm = () => {
   emit('update:modelValue', keys)
   emit('change', keys)
 }
-const handleClear = (params) => {
-  console.log('params:::', params)
-}
+
 const handleTreeChange = (value, record) => {
   const { originItem, checkedStatus } = record
   if (checkedStatus) {
@@ -167,25 +175,42 @@ function loadRoot() {
 // 翻译input内的值
 function loadItemByCode() {
   let value = props.modelValue
-  console.log('部门组件翻译props.modelValue', props.modelValue)
-  if (isArray(props.modelValue)) {
-    // @ts-ignore
-    value = value.join(',')
+  if(value){
+    console.log('部门组件翻译props.modelValue', props.modelValue)
+    if (isArray(props.modelValue)) {
+      // @ts-ignore
+      value = value.join(',')
+    }
+    if (value === treeData.value.map((item) => item.key).join(',')) {
+      // 说明是刚选完，内部已有翻译。不需要再请求
+      return
+    }
+    value = (value as string).trim()
+    if (value) {
+      http
+          .get(api.queryDepartTreeSync, { ids: value })
+          .then((res: any) => {
+            if (res.success) {
+              const { result = [] } = res
+              showText.value = result.map((item) => item[props.labelKey]).join(',')
+              if (props.multiple) {
+                defaultCheckedKeys.value = typeof value === 'string' ? value.split(',') : [value]
+              } else {
+                defaultCheckedKeys.value = value
+              }
+            } else {
+            }
+          })
+          .catch((err) => {})
+    }
   }
-  if (value === treeData.value.map((item) => item.key).join(',')) {
-    // 说明是刚选完，内部已有翻译。不需要再请求
-    return
-  }
-  http
-    .get(api.queryDepartTreeSync, { ids: value })
-    .then((res: any) => {
-      if (res.success) {
-        const { result = [] } = res
-        showText.value = result.map((item) => item[props.labelKey]).join(',')
-      } else {
-      }
-    })
-    .catch((err) => {})
+}
+
+// 清空
+const handleClear = () => {
+  showText.value = ''
+  treeValue.value = []
+  confirm()
 }
 
 watch(
@@ -195,13 +220,7 @@ watch(
   },
   { deep: true, immediate: true },
 )
-watch(
-  () => props.pcode,
-  () => {
-    loadRoot()
-  },
-  { deep: true, immediate: true },
-)
+loadRoot()
 </script>
 
 <style lang="scss" scoped>
@@ -245,6 +264,21 @@ watch(
   :deep(.da-tree) {
     .da-tree-item__checkbox {
       // display: none;
+    }
+  }
+}
+.pickerArea {
+  position: relative;
+  .u-icon-close {
+    position: absolute;
+    right: 15px;
+    top: calc(14px + 4px);
+    color: #585858;
+    font-size: 15px;
+  }
+  &.clear {
+    :deep(.wd-input__body) {
+      padding-right: 20px;
     }
   }
 }

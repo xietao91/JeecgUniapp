@@ -49,12 +49,9 @@ const props = defineProps({
 		default: '',
 		required: false,
 	},
-	value: {
-		type: [Array, String],
-		required: false,
-	},
   modelValue: {
     type: [Array, String],
+    required: false,
   },
 	disabled: {
 		type: Boolean,
@@ -64,7 +61,7 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['input', 'change', 'update:value'])
+const emit = defineEmits([ 'change', 'update:modelValue'])
 
 // 定义响应式数据
 const selected = ref([]);
@@ -93,7 +90,12 @@ const initSelections = async () => {
 		}
 		if (isString(props.dict)) {
 			try {
-				const res = await http.get('/sys/dict/getDictItems/' + props.dict)
+        let code = props.dict;
+        if (code.indexOf(',') > 0 &&  code.indexOf(' ') > 0) {
+          // 编码后类似sys_user%20where%20username%20like%20xxx' 是不包含空格的,这里判断如果有空格和逗号说明需要编码处理
+          code = encodeURI(code);
+        }
+				const res = await http.get('/sys/dict/getDictItems/' + code)
 				if (res.success) {
 					options.value = res.result
 				}
@@ -110,13 +112,14 @@ const initSelections = async () => {
 }
 
 // 选择器改变事件处理函数
-const handleChange = (e) => {
-	let value = "";
-	if (selected.value && isArray(selected.value)) {
-		value = selected.value.join(',')
+const handleChange = ({value}) => {
+  console.log("下拉多选handleChange",value);
+	let valueStr = "";
+	if (value && isArray(value)) {
+    valueStr = value.join(',');
 	}
-	emit('update:value', value);
-	emit('change', value);
+	emit('update:modelValue', valueStr);
+	emit('change', valueStr);
 }
 
 // 监听 dict 和 value 的变化
@@ -127,7 +130,11 @@ watch(() => props.dict, () => {
 watch(
     () => props.modelValue,
     () => {
-      selected.value = props?.modelValue? props.modelValue.split(','):[];
+      if(props?.modelValue){
+        selected.value = isString(props.modelValue)? props.modelValue.split(','):[];
+      }else{
+        selected.value = []
+      }
     },
     { deep: true, immediate: true }
 )
@@ -136,5 +143,8 @@ onMounted(() => {
 	initSelections()
 })
 </script>
-
-<style></style>
+<style lang="scss" scoped>
+:deep(.wd-checkbox__shape){
+  border-radius:0 !important;
+}
+</style>

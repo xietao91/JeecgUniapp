@@ -1,7 +1,7 @@
 <template>
   <wd-popup v-model="show" position="bottom" @close="handleClose">
     <view class="contetn">
-      <wd-text v-if="title" :text="title"></wd-text>
+      <wd-text custom-class="title" v-if="title" :text="title"></wd-text>
       <wd-cell-group border>
         <wd-cell
           v-for="(item, index) in options"
@@ -41,15 +41,29 @@ const handleClick = (item) => {
 
 <style lang="scss" scoped>
 .contetn {
-  padding: 10px;
-  .wd-text.is-default {
+  padding-top: 10px;
+  :deep(.title) {
+    padding-left: 10px;
+    padding-right: 10px;
     font-size: 14px;
     color: #666;
+    margin-bottom: 10px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   :deep(.wd-cell) {
-    padding-left: 0;
+    padding-left: 10px;
+    --wot-cell-icon-size: 15px;
     --wot-cell-label-color: #444;
     --wot-cell-label-fs: 14px;
+    .wd-icon {
+      margin-right: 10px;
+    }
+    .wd-cell__label {
+      margin-top: 0;
+    }
     &.red {
       color: red;
       --wot-cell-label-color: red;

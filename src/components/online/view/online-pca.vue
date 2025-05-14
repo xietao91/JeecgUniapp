@@ -5,6 +5,8 @@
       :label-width="labelWidth"
       :label="label"
       :required="required"
+      :disabled="disabled"
+      :placeholder="placeholder"
       v-model="selected"
       :column-change="onChangeDistrict"
       @confirm="handleConfirm"
@@ -13,8 +15,7 @@
 </template>
 
 <script lang="ts" setup>
-import { areaData } from '@/components/online/area-picker-data'
-import {getAreaArrByCode} from '@/common/areaData/Area'
+import { getAreaArrByCode,getPcaOptionData } from '@/common/areaData/Area'
 import {isString} from "@/utils/is";
 // 接收 props
 const props = defineProps({
@@ -25,7 +26,7 @@ const props = defineProps({
   },
   labelWidth: {
     type: String,
-    default: '80px',
+    default: '130px',
     required: false,
   },
   value: {
@@ -47,13 +48,18 @@ const props = defineProps({
     default: false,
     required: false,
   },
+  backAll: {
+    type: Boolean,
+    default: true,
+    required: false,
+  },
 })
 // 定义 emits
 const emits = defineEmits(['input', 'change', 'update:value'])
 
 // 定义响应式数据
 const selected = ref([])
-const district = { ...areaData }
+const district = { ...getPcaOptionData() }
 const columns = ref([
   district[0],
   district[district[0][0].value],
@@ -71,7 +77,9 @@ const onChangeDistrict = (pickerView, value, columnIndex, resolve) => {
 }
 
 const handleConfirm = ({value}) => {
-  emits('update:value', value);
+  if(value){
+    emits('update:value', props.backAll?value:value[2]);
+  }
 }
 // 监听 value 变化
 watch(
