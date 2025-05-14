@@ -8,6 +8,7 @@ export const compList = [
  	"JNegativeBar",
 	"JHorizontalBar",
 	"JMixLineBar",
+	"JProgress",
 
  	"JLine",
 	"JArea",
@@ -50,12 +51,15 @@ export const compList = [
 	"JCommonTable",
 	"JQuickNav",
 	"JFilterQuery",
+	"JForm",
 
 	"JBubbleMap",
 	"JBarMap",
 	"JHeatMap",
 	"JAreaMap",
 	"JFlyLineMap",
+	"JTotalFlyLineMap",
+	"JTotalBarMap",
  ];
  //不包含操作的组件
 export const noActionList = [

@@ -4,6 +4,10 @@
   style: {
     navigationStyle: 'custom',
     navigationBarTitleText: 'Online表单新增',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -45,7 +49,10 @@ const initForm = (item) => {
   // 表名
   tableName.value = item.desformCode
   // 表描述
-  navTitle.value = `表单【${item.desformName}】发起申请`
+  navTitle.value = `表单【${item.desformName}】`
+  if (item.backRouteName === 'paper') {
+    navTitle.value = `表单【${item.desformName}】发起申请`
+  }
   // 返回上一页面
   item.backRouteName && (backRouteName.value = item.backRouteName)
   nextTick(() => {
@@ -76,7 +83,27 @@ const startProcess = (id) => {
 
 // 定义 handleSuccess 方法
 const handleSuccess = (id) => {
-  callPrevPageMethod()
+  if (backRouteName.value === 'paper') {
+    uni.showModal({
+      title: '提示',
+      content: '确认提交流程吗?',
+      cancelText: '取消',
+      confirmText: '确认',
+      success: (res) => {
+        if (res.confirm) {
+          startProcess(id)
+          uni.showToast({
+            title: '发起流程成功~',
+            icon: 'none',
+          })
+        } else {
+          router.back()
+        }
+      },
+    })
+  } else {
+    callPrevPageMethod()
+  }
 }
 
 // 定义一个方法来调用上一页的方法

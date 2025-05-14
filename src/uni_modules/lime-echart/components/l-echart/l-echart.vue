@@ -75,7 +75,7 @@ const echartsObj = {}
  * @value 2d 使用canvas 2d，部分小程序支持
  * @value '' 使用原生canvas，会有层级问题
  * @value bottom right	不缩放图片，只显示图片的右下边区域
- * @property {Boolean} isDisableScroll	 
+ * @property {Boolean} isDisableScroll
  * @property {number} beforeDelay = [30]  延迟初始化 (毫秒)
  * @property {Boolean} enableHover PC端使用鼠标悬浮
 
@@ -209,7 +209,7 @@ export default {
 				this.chart.dispatchAction(event.replace(/"/g,''), options)
 			}
 			if(file) {
-				thie.file = file
+        this.file = file
 			}
 		},
 		// #endif
@@ -274,9 +274,9 @@ export default {
 							}
 						});
 				})
-				
+
 			}
-			
+
 		},
 		canvasToTempFilePath(args = {}) {
 			// #ifndef APP-NVUE
@@ -317,7 +317,7 @@ export default {
 			}
 			// #endif
 			let theme=null,opts={},callback;
-			
+
 			Array.from(arguments).forEach(item => {
 				if(typeof item === 'function') {
 					callback = item
@@ -329,7 +329,7 @@ export default {
 					opts = item
 				}
 			})
-			
+
 			if(this.beforeDelay) {
 				await sleep(this.beforeDelay)
 			}
@@ -402,7 +402,7 @@ export default {
 						const ctx = uni.createCanvasContext(this.canvasId, this);
 						canvas =  new Canvas(ctx, this, false);
 					}
-					
+
 					return { canvas, width, height, devicePixelRatio: dpr, node };
 				} else {
 					return {}
@@ -442,7 +442,7 @@ export default {
 					handler.processGesture(wrapTouch(e), 'start');
 					clearTimeout(this.endTimer);
 				}
-				
+
 			}
 			if(this.isPC) {
 				getRect(`#${this.canvasId}`, {context: this}).then(res => {
@@ -461,7 +461,7 @@ export default {
 				dispatch.call(handler, 'mousemove', this.getTouch(e, touches))
 				handler.processGesture(wrapTouch(e), 'change');
 			}
-			
+
 		},
 		touchEnd(e) {
 			this.isDown = false
@@ -497,7 +497,7 @@ export default {
 	}
 };
 </script>
-<style>	
+<style>
 .lime-echart {
 	position: relative;
 	/* #ifndef APP-NVUE */

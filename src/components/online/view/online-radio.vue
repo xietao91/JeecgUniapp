@@ -1,6 +1,22 @@
 <template>
+  <!-- #ifdef MP-WEIXIN -->
+  <wd-picker
+      :label-width="labelWidth"
+      :label="label"
+      clearable
+      filterable
+      v-model="selected"
+      :columns="options"
+      :disabled="disabled"
+      placeholder="请选择"
+      @confirm="handleChange"
+  ></wd-picker>
+  <!-- #endif -->
+
+  <!-- #ifndef MP-WEIXIN -->
 	<wd-select-picker
 			:label-width="labelWidth"
+      :show-confirm="false"
 			:label="label"
 			v-model="selected"
 			type="radio"
@@ -11,12 +27,14 @@
 			placeholder="请选择"
 			@change="handleChange"
 	></wd-select-picker>
+  <!-- #endif -->
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { isArray, isString } from 'lodash'
-import {http} from "@/utils/http"; // 假设使用 lodash 来判断类型
+import { http } from "@/utils/http";
+import { isNullOrUnDef } from "@/utils/is"; // 假设使用 lodash 来判断类型
 
 // 定义 props
 const props = defineProps({
@@ -50,7 +68,7 @@ const props = defineProps({
 		default: '',
 		required: false,
 	},
-	value: {
+  modelValue: {
 		type: [Array, String],
 		required: false,
 	},
@@ -62,10 +80,10 @@ const props = defineProps({
 })
 
 // 定义 emits
-const emit = defineEmits(['input', 'change', 'update:value'])
+const emit = defineEmits(['input', 'change', 'update:modelValue'])
 
 // 定义响应式数据
-const selected = ref([]);
+const selected = ref('');
 const options = ref([]);
 
 // 初始化选项
@@ -91,7 +109,12 @@ const initSelections = async () => {
 		}
 		if (isString(props.dict)) {
 			try {
-				const res = await http.get('/sys/dict/getDictItems/' + props.dict)
+        let code = props.dict;
+        if (code.indexOf(',') > 0 &&  code.indexOf(' ') > 0) {
+          // 编码后类似sys_user%20where%20username%20like%20xxx' 是不包含空格的,这里判断如果有空格和逗号说明需要编码处理
+          code = encodeURI(code);
+        }
+				const res = await http.get('/sys/dict/getDictItems/' + code)
 				if (res.success) {
 					options.value = res.result;
 				}
@@ -107,9 +130,9 @@ const initSelections = async () => {
 }
 
 // 选择器改变事件处理函数
-const handleChange = (e) => {
-	emit('update:value', selected.value);
-	emit('change', selected.value);
+const handleChange = ({value}) => {
+	emit('update:modelValue', value);
+	emit('change', value);
 }
 
 // 监听 dict 和 value 的变化
@@ -118,10 +141,9 @@ watch(() => props.dict, () => {
 });
 // 监听 value 的变化
 watch(
-		() => props.value,
+		() => props.modelValue,
 		(val) => {
-      console.log("字典单选》》》》》 ",val)
-			selected.value = val;
+			selected.value = isNullOrUnDef(val)?'':val;
 		},
 		{ immediate: true },
 )

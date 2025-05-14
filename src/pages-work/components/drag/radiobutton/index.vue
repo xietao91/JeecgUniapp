@@ -56,6 +56,7 @@ const getButtonStyle = computed(() => {
     backgroundColor:'inherit',
     marginLeft: `${marginLeft}px`,
     marginTop: `${marginTop}px`,
+    overflow: 'auto'
   };
 });
 
@@ -107,6 +108,10 @@ function getSimpText(title){
 
 onMounted(() => {
   queryData(config);
+});
+
+defineExpose({
+  queryData
 });
 </script>
 

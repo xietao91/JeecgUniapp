@@ -4,6 +4,8 @@
 
 <script setup>
 // 定义 props
+import dayjs from "dayjs";
+
 const props = defineProps({
   label: {
     type: String,
@@ -26,7 +28,7 @@ const props = defineProps({
     required: false,
   },
   value: {
-    type: [String, Number],
+    type: [String, Number,Date],
     required: false,
   },
   disabled: {
@@ -45,9 +47,28 @@ const currentTime = ref('')
 watch(
     () => props.value,
     (val) => {
-        currentTime.value  = val?val:'';
+        currentTime.value  = initData(val);
+    },
+    {
+      immediate:true
     }
 )
+
+/**
+ *
+ * @param val
+ * @returns {*|string}
+ */
+function initData(time){
+  try {
+    if(typeof time == 'object' ){
+      time = dayjs(time).format('HH:mm:ss');
+    }
+  }catch (e) {
+    console.log("initData>>e",e);
+  }
+  return time?time:'';
+}
 // 选择器改变事件处理函数
 const handleConfirm = (e) => {
   emit('update:value', currentTime.value+':00')

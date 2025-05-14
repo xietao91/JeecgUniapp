@@ -1,7 +1,7 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <echartsUniapp v-else :option="option"></echartsUniapp>
+    <echartsUniapp v-else :option="option" :chartData="dataSource" :config="config" :id="id"></echartsUniapp>
   </view>
 </template>
 
@@ -11,7 +11,7 @@ import {
   deepMerge,
   handleTotalAndUnit,
   disposeGridLayout,
-  getCustomColor,
+  getCustomColor, setLegendTop, commonOption,
 } from '../../common/echartUtil'
 import { isNumber } from '@/utils/is'
 import useChartHook from '@/pages-work/components/hooks/useEchart'
@@ -55,7 +55,7 @@ let chartOption = {
 let [{ dataSource, reload, pageTips, config }, { queryData }] = useChartHook(props, initOption)
 
 //初始化图表配置项
-function initOption(data) {
+function initOption(data: any) {
   let chartData: any = dataSource.value
   if (typeof chartData === 'string') {
     chartData = JSON.parse(chartData)
@@ -68,15 +68,15 @@ function initOption(data) {
     const colors = getCustomColor(config.option.customColor)
     //设置配色
     chartData = chartData.map((item, index) => {
-      let legendColor = config.option.series[0].color ? config.option.series[0].color[index] : null
+      let legendColor = config.option?.series[0]?.color ? config?.option?.series[0]?.color[index] : null
       return {
         ...item,
-        itemStyle: { color: legendColor || colors[index].color || null },
+        itemStyle: { color: legendColor || colors[index]?.color || null },
       }
     })
-    chartOption.series[0].data = chartData
-    chartOption.series[0].roseType = 'radius'
-    chartOption.series[0].label.position = config.option.pieLabelPosition || 'outside'
+    chartOption.series[0].data = chartData;
+    chartOption.series[0].roseType = 'radius';
+    chartOption.series[0].label.position = config.option.pieLabelPosition || 'outside';
     chartOption.series[0].center = [
       (config.option.grid.left || 50) + '%',
       (config.option.grid.top || 50) + '%',
@@ -85,9 +85,11 @@ function initOption(data) {
     // 合并配置
     if (props.config && config.option) {
       merge(chartOption, config.option)
+      setLegendTop(chartOption, config)
+      chartOption = commonOption(chartOption, config)
       chartOption = handleTotalAndUnit(props.compName, chartOption, config, chartData)
       chartOption.series[0]['radius'] = '40%'
-
+      console.log("南丁格尔玫瑰chartOption****>",chartOption)
       option.value = deepClone(chartOption)
       pageTips.show = false
     }
@@ -100,8 +102,11 @@ function initOption(data) {
 onMounted(() => {
   queryData()
 })
+defineExpose({
+  queryData
+});
 </script>
-<style>
+<style scoped>
 .content {
   padding: 10px;
 }

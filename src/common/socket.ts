@@ -14,13 +14,12 @@ class socket {
     this.socketReceive()
   }
   init(socket_type, callback?) {
-		const userStore = useUserStore()
-    const _this = this
+    const userStore = useUserStore()
     if (baseUrl) {
       if (this.socketStart) {
         console.log('webSocket已经启动了')
       } else {
-        _this.socketType = socket_type
+        this.socketType = socket_type
         let url =
           this.socketUrl.replace('https://', 'wss://').replace('http://', 'ws://') +
           '/' +
@@ -53,7 +52,7 @@ class socket {
           console.log('WebSocket连接已打开！')
         })
         /* setTimeout(() => {
-				   _this.getHeartbeat();
+				   this.getHeartbeat();
 				}, 5000); */
       }
     } else {
@@ -62,8 +61,7 @@ class socket {
   }
   // Socket给服务器发送消息
   send(data, callback) {
-		const userStore = useUserStore()
-    const _this = this
+    const userStore = useUserStore()
     if (userStore.userInfo.userid) {
       data.userUid = userStore.userInfo.userid
     }
@@ -78,45 +76,43 @@ class socket {
       },
     })
   }
+  acceptMessage(msg) {
+    console.log(msg)
+  }
   // Socket接收服务器发送过来的消息
   socketReceive() {
-    const _this = this
-    uni.onSocketMessage(function (res) {
+    uni.onSocketMessage((res) => {
       console.log('APP:--》收到服务器内容：')
       let data = JSON.parse(res.data)
       // console.log('收到服务器内容：', data);
-      _this.acceptMessage && _this.acceptMessage(data)
+      this.acceptMessage && this.acceptMessage(data)
     })
   }
   // 关闭Socket
   closeSocket() {
-    const _this = this
     uni.closeSocket()
-    _this.socketStart = false
+    this.socketStart = false
   }
   // 监听Socket关闭
   monitorSocketClose() {
-    const _this = this
-    uni.onSocketClose(function (res) {
+    uni.onSocketClose((res) => {
       console.log('WebSocket 已关闭！')
-      _this.socketStart = false
-      setTimeout(function () {
-        _this.init(_this.socketType)
+      this.socketStart = false
+      setTimeout(() => {
+        this.init(this.socketType)
       }, 3000)
     })
   }
   // 监听Socket错误
   monitorSocketError() {
-    const _this = this
     uni.onSocketError(function (res) {
-      _this.socketStart = false
+      this.socketStart = false
       console.log('WebSocket连接打开失败，请检查！')
     })
   }
   // 心跳
   getHeartbeat() {
-		const userStore = useUserStore()
-    const _this = this
+    const userStore = useUserStore()
     this.send(
       {
         type: '心跳',
@@ -125,10 +121,10 @@ class socket {
       (val) => {
         setTimeout(() => {
           if (val) {
-            // _this.getHeartbeat();
+            // this.getHeartbeat();
           } else {
-            if (!_this.socketStart) {
-              // _this.init();
+            if (!this.socketStart) {
+              // this.init();
             }
           }
         }, 10000)

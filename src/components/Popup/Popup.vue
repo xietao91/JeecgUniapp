@@ -1,6 +1,6 @@
 <template>
   <view class="Popup">
-    <view @click="handleClick">
+    <view class="inputArea" :class="{ clear: !!showText }" @click="handleClick">
       <wd-input
         :placeholder="`请选择${$attrs.label}`"
         type="text"
@@ -9,6 +9,7 @@
         clearable
         v-bind="$attrs"
       />
+      <view v-if="!!showText && !$attrs.disabled" class="u-iconfont u-icon-close" @click.stop="handleClear"></view>
     </view>
     <popupReportModal
       v-if="reportModal.show"
@@ -29,8 +30,8 @@ import popupReportModal from './components/popupReportModal.vue'
 defineOptions({
   name: 'Popup',
   options: {
-    styleIsolation: 'shared'
-  }
+    styleIsolation: 'shared',
+  },
 })
 const props = defineProps({
   code: {
@@ -68,7 +69,7 @@ const showText = ref('')
 const attrs: any = useAttrs()
 const reportModal = reactive({
   show: false,
-  showFiled: props.fieldConfig.map((item) => item['target']).join(','),
+  showFiled: props.fieldConfig.map((item) => item['source']).join(','),
 })
 if (!props.code || props.fieldConfig.length == 0) {
   toast.error('popup参数未正确配置!')
@@ -101,6 +102,13 @@ function callBack(rows) {
   emit('change', values)
   // emit('update:modelValue', values)
 }
+
+// 清空
+const handleClear = () => {
+  showText.value = ''
+  handleChange([])
+}
+
 const handleClick = () => {
   if (!attrs.disabled) {
     reportModal.show = true
@@ -115,4 +123,20 @@ const handleChange = (data) => {
 }
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.inputArea {
+  position: relative;
+  .u-icon-close {
+    position: absolute;
+    right: 15px;
+    top: calc(14px + 4px);
+    color: #585858;
+    font-size: 15px;
+  }
+  &.clear {
+    :deep(.wd-input__body) {
+      padding-right: 20px;
+    }
+  }
+}
+</style>

@@ -2,10 +2,17 @@
 import { onLaunch, onShow, onHide, onLoad, onReady } from '@dcloudio/uni-app'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 import { beforEach } from '@/router/index'
+ // #ifdef APP-PLUS
+import appUpdate from "@/common/appUpdate";
+// #endif
 export default {
   onLaunch: function (options) {
     console.log('App Launch')
     console.log('应用启动路径：', options.path)
+    // #ifdef APP-PLUS
+    // 检测升级
+    appUpdate()
+    // #endif
   },
   onShow: function (options) {
     console.log('App Show')
@@ -27,13 +34,15 @@ export default {
   globalData: {
     isLocalConfig: true,
     systemInfo: uni.getSystemInfoSync(),
+    // 导航的高度
     navHeight: 44,
   },
 }
 </script>
 
 <style lang="scss">
-body {
+:root,
+page {
   font-size: 14px;
   color: #333333;
   font-family:

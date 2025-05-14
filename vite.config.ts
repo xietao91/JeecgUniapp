@@ -2,6 +2,8 @@ import Uni from '@dcloudio/vite-plugin-uni'
 import dayjs from 'dayjs'
 import path from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
+import fs from 'node:fs'
+import { generateComponentTypes } from './vite-plugins/generateComponentTypes'
 console.log('进入 vite')
 // @see https://uni-helper.js.org/vite-plugin-uni-pages
 import UniPages from '@uni-helper/vite-plugin-uni-pages'
@@ -19,7 +21,6 @@ import AutoImport from 'unplugin-auto-import/vite'
 import ViteRestart from 'vite-plugin-restart'
 import { copyNativeRes } from './vite-plugins/copyNativeRes'
 import { viteMockServe } from 'vite-plugin-mock'
-
 
 // https://vitejs.dev/config/
 export default ({ command, mode }) => {
@@ -49,11 +50,13 @@ export default ({ command, mode }) => {
     VITE_USE_MOCK,
   } = env
   console.log('环境变量 env -> ', env)
-
+  // 在h5平台把vite环境变量提取出来替换成window上的属性
+  const define = UNI_PLATFORM === 'h5' && mode === 'production' ? createDynamicDefine(env) : {}
   return defineConfig({
     envDir: './env', // 自定义env目录
 
     plugins: [
+      generateComponentTypes(),
       UniPages({
         exclude: ['**/components/**/**.*'],
         routeBlockLang: 'json5', // 虽然设了默认值，但是vue文件还是要加上 lang="json5", 这样才能很好地格式化
@@ -122,10 +125,12 @@ export default ({ command, mode }) => {
         // 开发服务器才启用mock数据
         enable: mode === 'development' && JSON.parse(VITE_USE_MOCK),
       }),
+      UNI_PLATFORM === 'h5' && mode === 'production' && createEnvConfigPlugin(),
     ],
     define: {
       __UNI_PLATFORM__: JSON.stringify(UNI_PLATFORM),
       __VITE_APP_PROXY__: JSON.stringify(VITE_APP_PROXY),
+      ...define,
     },
     css: {
       postcss: {
@@ -173,4 +178,45 @@ export default ({ command, mode }) => {
       },
     },
   })
+}
+// 环境变量映射到window上的属性
+function createDynamicDefine(envVars) {
+  return Object.keys(envVars).reduce((acc, key) => {
+    if (key.startsWith('VITE_')) {
+      acc[`import.meta.env.${key}`] = `window.__APP_CONFIG__.${key}`
+    }
+    return acc
+  }, {})
+}
+function createEnvConfigPlugin() {
+  let mode = 'production'
+  let envDir = process.cwd()
+
+  return {
+    name: 'dynamic-env',
+    config(config, { mode: configMode }) {
+      mode = configMode || 'production'
+      envDir = config.envDir || envDir
+    },
+    async writeBundle(options) {
+      const env = loadEnv(mode, path.resolve(process.cwd(), 'env'))
+      delete env['VITE_ROOT_DIR']
+      // 生成动态配置文件
+      const configContent = `window.__APP_CONFIG__ = ${JSON.stringify(env)};`
+      const outputDir = options.dir || path.resolve(envDir, 'dist')
+      const configPath = path.join(outputDir, 'app.config.js')
+      // 写入配置文件
+      fs.writeFileSync(configPath, configContent, 'utf-8')
+      // 修改 index.html 注入脚本
+      const indexPath = path.join(outputDir, 'index.html')
+      if (fs.existsSync(indexPath)) {
+        let html = fs.readFileSync(indexPath, 'utf-8')
+        const scriptTag = '<script src="./app.config.js"></script>'
+        if (!html.includes('app.config.js')) {
+          html = html.replace('</title>', `</title> \n ${scriptTag}`)
+          fs.writeFileSync(indexPath, html, 'utf-8')
+        }
+      }
+    },
+  }
 }

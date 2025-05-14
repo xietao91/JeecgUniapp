@@ -1,7 +1,7 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <echartsUniapp v-else :option="option"></echartsUniapp>
+    <echartsUniapp v-else :option="option" :chartData="dataSource" :config="config" :id="id" ></echartsUniapp>
   </view>
 </template>
 
@@ -10,6 +10,8 @@ import { echartProps } from '@/pages-work/components/echarts/props'
 import {
   deepMerge,
   handleTotalAndUnit,
+  setLegendTop,
+  commonOption,
   disposeGridLayout,
   getCustomColor,
 } from '../../common/echartUtil'
@@ -69,10 +71,10 @@ function initOption(data) {
     const colors = getCustomColor(config.option.customColor)
     //设置配色
     chartData = chartData.map((item, index) => {
-      let legendColor = config.option.series[0].color ? config.option.series[0].color[index] : null
+      let legendColor = config.option?.series[0].color ? config.option?.series[0]?.color[index] : null
       return {
         ...item,
-        itemStyle: { color: legendColor || colors[index].color || null },
+        itemStyle: { color: legendColor || colors[index]?.color || null },
       }
     })
     chartOption.series[0].data = chartData
@@ -82,12 +84,15 @@ function initOption(data) {
       (config.option.grid.left || 50) + '%',
       (config.option.grid.top || 50) + '%',
     ]
-
     // 合并配置
     if (props.config && config.option) {
       merge(chartOption, config.option)
+      setLegendTop(chartOption, config)
+      chartOption['tempData'] = chartData;
+      chartOption = commonOption(chartOption, config)
       chartOption = handleTotalAndUnit(props.compName, chartOption, config, chartData)
       option.value = deepClone(chartOption)
+      console.log("饼状图option",chartOption)
       pageTips.show = false
     }
   } else {
@@ -99,8 +104,12 @@ function initOption(data) {
 onMounted(() => {
   queryData()
 })
+
+defineExpose({
+  queryData
+});
 </script>
-<style>
+<style scoped>
 .content {
   padding: 10px;
 }

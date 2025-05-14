@@ -1,6 +1,6 @@
 <template>
-  <view class="number-container" :style="{'width': horizontal ? '80vh' : '100%','height':getHeight}">
-    <view :style="getTextStyle">{{ showText }}</view>
+  <view class="number-container" :style="getBodyStyle">
+    <view :style="getTextStyle" @tap="textClick(showText)" >{{ showText }}</view>
   </view>
 </template>
 
@@ -13,7 +13,7 @@ import {isObject} from "@/common/is";
 const props = defineProps(echartProps);
 
 // 使用 mixin
-let [{ dataSource, reload, pageTips, config }, { queryData }] = useChartHook(props, initOption)
+let [{ dataSource, reload, pageTips, config }, { queryData,handleClick }] = useChartHook(props, initOption)
 
 const showText = computed(() => {
   return dataSource.value;
@@ -23,23 +23,47 @@ const getHeight = computed(() => {
   return config.size.height + 'px';
 });
 
+
+const getBodyStyle = computed(() => {
+  let background = props.config.background || '#ffffff';
+  return {
+    width: props.horizontal ? '80vh' : '100%',
+    height:config.size.height + 'px',
+    background: `${background}`,
+  };
+});
+
 const getTextStyle = computed(() => {
   let fontSize = props.config.option.body.fontSize || 20;
   let color = props.config.option.body.color || '#000000';
   let fontWeight = props.config.option.body.fontWeight || 'normal';
   let background = props.config.background || '#ffffff';
-  let textAlign = props.config.option.body.textAlign || 'left';
   let marginLeft = props.config.option.body.marginLeft || 0;
   let marginTop = props.config.option.body.marginTop || 0;
+  let textAlign = props.config.option?.body?.textAlign || 'center';
+  let lowAppStyle;
+  switch (textAlign) {
+    case 'center':
+      lowAppStyle = { display: 'flex', justifyContent: 'center', alignItems: 'center' };
+      break;
+    case 'center-left':
+      lowAppStyle = { display: 'flex', justifyContent: 'left', alignItems: 'center' };
+      break;
+    case 'center-right':
+      lowAppStyle = { display: 'flex', justifyContent: 'right', alignItems: 'center' };
+      break;
+    default:
+      lowAppStyle = {};
+  }
   return {
     fontSize: `${fontSize}px`,
     color: `${color}`,
     fontWeight: `${fontWeight}`,
     marginLeft: `${marginLeft}px`,
     marginTop: `${marginTop}px`,
-    backgroundColor: `${background}`,
     textAlign: `${textAlign}`,
-    height: `${getHeight}`
+    height: `${getHeight.value}`,
+    ...lowAppStyle
   };
 });
 
@@ -50,17 +74,31 @@ function initOption (data){
   if (dataSource.value) {
     if (Array.isArray(dataSource.value) && dataSource.value.length > 0) {
       dataSource.value = dataSource.value[0].value;
-    } else if (isObject(chartData)) {
-      dataSource.value = dataSource.value;
     }
   }
 };
-
+/**
+ * 文本跳转
+ */
+function textClick(text) {
+  let option = props.config.option;
+  //配置超链接点击
+  //#ifdef H5
+  if(option?.isLink && option?.openUrl){
+    window.open(option?.openUrl,option?.openType || "_blank")
+  }
+  // #endif
+  //配置联动点击
+  handleClick({value:text});
+}
 // 生命周期钩子
 onMounted(() => {
   queryData();
 });
 
+defineExpose({
+  queryData
+});
 
 </script>
 

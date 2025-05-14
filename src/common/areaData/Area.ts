@@ -42,7 +42,7 @@ class Area {
     this.all = arr;
   }
 
-  get pca() {
+  getPca() {
     return this.all;
   }
 
@@ -96,6 +96,63 @@ class Area {
     }
   }
 }
+interface RegionItem {
+  id: string;
+  text: string;
+  pid: string;
+  index: number;
+}
+
+interface TransformedItem {
+  label: string;
+  value: string;
+}
+
+type TransformedData = Record<string, TransformedItem[]>;
+
+export function transformRegionData(originalData: RegionItem[]): TransformedData {
+  const result: TransformedData = {};
+
+  // 首先处理省级数据 (pid 为 '86' 的项)
+  const provinces = originalData.filter(item => item.pid === '86');
+  result['0'] = provinces.map(province => ({
+    label: province.text,
+    value: province.id
+  }));
+
+  // 然后处理市级数据
+  const cities = originalData.filter(item =>
+      provinces.some(province => province.id === item.pid)
+  );
+
+  cities.forEach(city => {
+    if (!result[city.pid]) {
+      result[city.pid] = [];
+    }
+    result[city.pid].push({
+      label: city.text,
+      value: city.id
+    });
+  });
+
+  // 最后处理区县级数据
+  const districts = originalData.filter(item =>
+      cities.some(city => city.id === item.pid)
+  );
+
+  districts.forEach(district => {
+    if (!result[district.pid]) {
+      result[district.pid] = [];
+    }
+    result[district.pid].push({
+      label: district.text,
+      value: district.id
+    });
+  });
+
+  return result;
+}
+
 const jeecgAreaData = new Area();
 
 // 根据code找文本
@@ -113,5 +170,10 @@ const getAreaTextByCode = function (code) {
 const getAreaArrByCode = function (code) {
   return jeecgAreaData.getRealCode(code);
 };
+// 获取下拉地图option
+const getPcaOptionData = function () {
+  let pca:any = jeecgAreaData.getPca();
+  return transformRegionData(pca);
+};
 
-export { getAreaTextByCode,getAreaArrByCode };
+export { getAreaTextByCode,getAreaArrByCode,getPcaOptionData };

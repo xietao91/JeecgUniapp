@@ -2,6 +2,8 @@ import { CustomRequestOptions } from '@/interceptors/request'
 import { useUserStore } from '@/store/user'
 import signMd5Utils from '@/utils/signMd5Utils'
 import { isH5 } from '@/utils/platform'
+import {getEnvBaseUrl} from "@/utils/index";
+import {buildURL,buildFullPath} from "@/utils/helpers/buildURL";
 
 export const http = <T>(options: CustomRequestOptions) => {
   // 1. 返回 Promise 对象
@@ -14,8 +16,8 @@ export const http = <T>(options: CustomRequestOptions) => {
     }
     let sign = signMd5Utils.getSign(options.url, params)
     let vSign = signMd5Utils.getVSign(options.data, sign)
-    if (JSON.parse(import.meta.env.VITE_USE_MOCK) && JSON.parse(import.meta.env.VITE_APP_PROXY) && isH5) {
-      // 开始mock时，加上前缀
+    if ( JSON.parse(import.meta.env.VITE_APP_PROXY) && isH5 && import.meta.env.MODE === 'development') {
+      // 开启了代理须加前缀。仅支持 H5 端
       options.url = import.meta.env.VITE_APP_PROXY_PREFIX + options.url
     }
     uni.request({
@@ -114,11 +116,9 @@ export const httpPost = <T>(
 export const httpPUT = <T>(
   url: string,
   data?: Record<string, any>,
-  query?: Record<string, any>,
 ) => {
   return http<T>({
     url,
-    query,
     data,
     method: 'PUT',
   })
@@ -129,14 +129,128 @@ export const httpPUT = <T>(
  * @param query 请求query参数
  * @returns
  */
-export const httpDelete = <T>(url: string, query?: Record<string, any>, header?: any) => {
+export const httpDelete = <T>(url: string, data?: Record<string, any>, header?: any) => {
   return http<T>({
     url,
-    query,
+    data,
     method: 'DELETE',
   })
 }
+
+const requestComFun = (response) => {
+  return response
+}
+
+const requestComFail = (response) => {
+  return response
+}
+/**
+ * 上传 请求
+ * @param url 后台地址
+ * @param query 请求query参数
+ * @returns
+ */
+export const httpUpload = <T>(url: string, {
+  // #ifdef APP-PLUS || H5
+  files,
+  // #endif
+  filePath,
+  name,
+  // #ifdef H5
+  file,
+  // #endif
+  header = {},
+  formData = {},
+  custom = {},
+  params = {},
+  getTask
+}: any) => {
+  return new Promise((resolve, reject) => {
+    let next = true;
+    const userStore = useUserStore();
+    const globalHeader = {
+      'X-Access-Token': userStore.userInfo.token,
+      'X-Tenant-Id': userStore.userInfo.tenantId,
+      'X-TIMESTAMP': signMd5Utils.getTimestamp(),
+    }
+    const pubConfig = {
+      baseUrl: getEnvBaseUrl(),
+      url,
+      filePath,
+      method: 'UPLOAD',
+      name,
+      header: {...globalHeader, ...header},
+      formData,
+      params,
+      custom: { ...custom},
+      getTask: getTask
+    } as any
+    // #ifdef APP-PLUS || H5
+    if (files) {
+      pubConfig.files = files
+    }
+    // #endif
+    // #ifdef H5
+    if (file) {
+      pubConfig.file = file
+    }
+    // #endif
+    const requestBeforeFun = (config) => {
+      return config
+    }
+    //校验状态码
+    const validateStatus= (statusCode) => {
+      return statusCode === 200
+    }
+    const handleRe = {...pubConfig}
+    const _config = {
+      url: buildURL(buildFullPath(handleRe.baseUrl, handleRe.url), handleRe.params),
+      filePath: handleRe.filePath,
+      name: handleRe.name,
+      header: handleRe.header,
+      formData: handleRe.formData,
+      complete: (response) => {
+        response.config = handleRe
+        try {
+          // 对可能字符串不是json 的情况容错
+          if (typeof response.data === 'string') {
+            response.data = JSON.parse(response.data)
+          }
+        } catch (e) {
+        }
+        if (validateStatus(response.statusCode)) {
+          // 成功
+          response = requestComFun(response)
+          resolve(response)
+        } else {
+          response = requestComFail(response)
+          reject(response)
+        }
+      }
+    } as any
+
+    // #ifdef APP-PLUS || H5
+    if (handleRe.files) {
+      _config.files = handleRe.files
+    }
+    // #endif
+
+    // #ifdef H5
+    if (handleRe.file) {
+      _config.file = handleRe.file
+    }
+    // #endif
+
+    if (!next) return
+    const requestTask = uni.uploadFile(_config)
+    if (handleRe.getTask) {
+      handleRe.getTask(requestTask, handleRe)
+    }
+  })
+}
+
 http.get = httpGet
 http.post = httpPost
 http.put = httpPUT
 http.delete = httpDelete
+http.upload = httpUpload

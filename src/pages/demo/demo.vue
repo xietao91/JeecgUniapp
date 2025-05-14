@@ -4,6 +4,10 @@
   style: {
     navigationBarTitleText: 'demo演示',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
@@ -20,6 +24,21 @@
         <div class="content">
           <SelectDept label="部门：" :required="true" v-model="dept"></SelectDept>
         </div>
+      </view>
+      <view class="box shadow-warp">
+        <div class="content">
+          <SelectUserByDepart label="部门2：" :required="true" v-model="dept"></SelectUserByDepart>
+        </div>
+      </view>
+      <view class="box shadow-warp">
+        <DateTime
+          label="年月日时分秒："
+          v-model="dateTime"
+          format="YYYY-MM-DD HH:mm:ss"
+          startTime="2020-01-01 00:00:00"
+          endTime="2030-12-31 23:59:59"
+          @change="handleDateTimeChange"
+        />
       </view>
       <view class="box shadow-warp">
         <div class="content">
@@ -84,14 +103,14 @@
         <view class="content">
           <!-- <view class="title">提示</view> -->
           <view class="flex flex-col">
-            <wd-button custom-class="mb-2 info" @click="handleToast(0)">常规</wd-button>
-            <wd-button custom-class="mb-2 warning" @click="handleToast(1)">警告</wd-button>
-            <wd-button custom-class="mb-2 success" @click="handleToast(2)">成功</wd-button>
-            <wd-button custom-class="mb-2 error" @click="handleToast(3)">错误</wd-button>
-            <wd-button custom-class="mb-2 basic" @click="handleToast(4)">
+            <wd-button custom-class="mb-2 btn info" @click="handleToast(0)">常规</wd-button>
+            <wd-button custom-class="mb-2 btn warning" @click="handleToast(1)">警告</wd-button>
+            <wd-button custom-class="mb-2 btn success" @click="handleToast(2)">成功</wd-button>
+            <wd-button custom-class="mb-2 btn error" @click="handleToast(3)">错误</wd-button>
+            <wd-button custom-class="mb-2 btn basic" @click="handleToast(4)">
               基本用法(无icon)
             </wd-button>
-            <wd-button @click="handleConfirm">确认提示</wd-button>
+            <wd-button custom-class="btn" @click="handleConfirm">确认提示</wd-button>
           </view>
         </view>
       </view>
@@ -112,10 +131,13 @@ const user = ref('')
 const dept = ref('')
 const message = useMessage()
 const { showNotify, closeNotify } = useNotify()
-
+const dateTime = ref()
 const router = useRouter()
 const selected = ref([])
 const gridData = ref([])
+const handleDateTimeChange = (value) => {
+  console.log(value)
+}
 us.data.forEach((item: any, index) => {
   if (index < 9) {
     gridData.value.push({ text: item.title, img: item.icon, itemKey: index })
@@ -177,22 +199,22 @@ const handleToast = (value) => {
   switch (value) {
     case 0:
       // 909cb8
-      toast.info({ msg: '常规提示信息', duration: 10000 })
+      toast.info({ msg: '常规提示信息' })
       break
     case 1:
       // f0863b
-      toast.warning({ msg: '提示信息', duration: 10000 })
+      toast.warning({ msg: '提示信息' })
       break
     case 2:
       // 33d19d
-      toast.success({ msg: '操作成功', duration: 10000 })
+      toast.success({ msg: '操作成功' })
       break
     case 3:
       // f04550
-      toast.error({ msg: '手机验证码输入错误，请重新输入', duration: 10000 })
+      toast.error({ msg: '手机验证码输入错误，请重新输入' })
       break
     case 4:
-      toast.show({ msg: '手机验证码输入错误，请重新输入', duration: 10000 })
+      toast.show({ msg: '手机验证码输入错误，请重新输入' })
       break
   }
 }
@@ -229,7 +251,7 @@ const handleConfirm = (params) => {
   }
 
   .content {
-    :deep(.wd-button),
+    :deep(.btn),
     :deep(.imgView) {
       margin: 10px;
     }
@@ -250,10 +272,11 @@ const handleConfirm = (params) => {
   }
 }
 .router {
-  padding: 30px 15px;
+  padding: 30px 40px;
   display: flex;
+  justify-content: space-between;
   flex-wrap: wrap;
-  .wd-button {
+  :deep(.wd-button) {
     margin-bottom: 15px;
     &:nth-child(3),
     &:nth-child(4) {
@@ -271,7 +294,7 @@ const handleConfirm = (params) => {
   }
   .wd-cell {
     --wot-cell-title-fs: 15px;
-    --wot-cell-title-color: var(--color-gray);
+    --wot-cell-title-color: var(--color-grey);
     .wd-cell__left {
       font-size: 15px;
       font-weight: 300;

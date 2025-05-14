@@ -28,12 +28,45 @@ page {
   --UI-FG-1: rgba(0, 0, 0, 0.5);
   --UI-FG-2: rgba(0, 0, 0, 0.3);
   --UI-FG-3: rgba(0, 0, 0, 0.1);
-  --color-gray: #8799a3;
+  --color-gray: #aaa;
+  --color-grey: #8799a3;
+  --color-orange: #f37b1d;
+  --color-olive: #8dc63f;
+  --color-cyan: #1cbbb4;
+  --color-red: #e54d42;
+  --color-yellow: #fbbd08;
+  --color-blue: #0081ff;
+  --color-green: #39b54a;
 
-  .text-grey,
-  .line-grey,
-  .lines-grey {
+  .cu-text-grey {
+    color: var(--color-grey);
+  }
+  .cu-text-gray {
     color: var(--color-gray);
+  }
+  .cu-text-red {
+    color: var(--color-red);
+  }
+  .cu-text-orange {
+    color: var(--color-orange);
+  }
+  .cu-text-olive {
+    color: var(--color-olive);
+  }
+  .cu-text-red {
+    color: var(--color-red);
+  }
+  .cu-text-cyan {
+    color: var(--color-cyan);
+  }
+  .cu-text-yellow {
+    color: var(--color-yellow);
+  }
+  .cu-text-blue {
+    color: var(--color-blue);
+  }
+  .cu-text-green {
+    color: var(--color-green);
   }
   // 主题色
   --wot-color-theme: #0081ff;
@@ -44,9 +77,13 @@ page {
   --wot-text-info-color: var(--UI-FG-0);
   // 输入框
   --wot-input-color: #555;
-  // cell
+  --wot-cell-value-color: #555;
+  --wot-textarea-color: #555;
 
   // 重置 wot-design-uni
+  --wot-input-disabled-color: #bab8b8;
+  --wot-picker-column-disabled-color: #bab8b8;
+  --wot-input-clear-color: #8f8f8f;
   .wd-button {
     &.is-round {
       border-radius: 4px !important;
@@ -77,11 +114,30 @@ page {
   }
   // 万年历组件
   .uni-calendar {
-    .uni-calendar__header-text {
-      text-align: center;
-      width: 100px;
-      font-size: 24px;
-      color: #333;
+    .uni-calendar__header {
+      .uni-calendar__header-btn-box {
+        &:first-child {
+          .uni-calendar__header-text {
+            color: #9f9f9f;
+          }
+        }
+        &:last-child {
+          .uni-calendar__header-text {
+            color: var(--wot-color-theme);
+          }
+        }
+      }
+      .uni-calendar__header-text {
+        text-align: center;
+        width: 100px;
+        font-size: 24px;
+      }
     }
+  }
+}
+.uni-scroll-view {
+  .uni-scroll-view {
+    // ios13+不需要加这个属性了（这个属性和overflow:hidden一起使用，导致子孙元素即使设置了position:fixed也被裁剪了）
+    -webkit-overflow-scrolling: auto;
   }
 }

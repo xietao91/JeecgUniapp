@@ -205,12 +205,24 @@ const getRpColumns = () => {
             navTitle.value = result.cgRpConfigName
             dictOptions.value = result.dictOptions
             rpConfigId = result.cgRpConfigId
-            const fileds = props.showFiled.split(',')
+            const fileds = props.showFiled.split(',')[0]
             result.columns?.forEach((item) => {
               if (fileds.includes(item.dataIndex)) {
                 columns.value.push(item)
               }
             })
+            // 最少展示三个字段（字段够多时）
+            const minNum = 3
+            if (columns.value.length < minNum) {
+              result.columns?.forEach((item) => {
+                const findItem = columns.value.find((o) => o.dataIndex == item.dataIndex);
+                if (!findItem) {
+                  if (columns.value.length < minNum) {
+                    columns.value.push(item)
+                  }
+                }
+              })
+            }
             getQueryInfo()
             resolve()
           } else {
@@ -268,6 +280,7 @@ const queryList = (pageNo, pageSize) => {
   align-items: center;
   justify-content: space-between;
   background: #fff;
+  line-height: 1.8;
   padding: 16px;
   margin-top: 16px;
   .left {

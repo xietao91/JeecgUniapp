@@ -5,7 +5,7 @@
       <!--数值-->
       <view class="content-wrapper">
         <view class="valignWrapper" style="display: flex; min-width: 0">
-          <view class="count ellipsis" :style="getTextStyle"> {{ showValue }}</view>
+          <view class="count ellipsis" @tap="textClick(showValue)" :style="getTextStyle"> {{ showValue }}</view>
         </view>
       </view>
       <!--趋势-->
@@ -29,7 +29,7 @@ import useChartHook from '@/pages-work/components/hooks/useEchart'
 const props = defineProps(echartProps);
 
 // 使用 mixin
-let [{ dataSource, reload, pageTips, config }, { queryData }] = useChartHook(props, initOption)
+let [{ dataSource, reload, pageTips, config }, { queryData,handleClick }] = useChartHook(props, initOption)
 
 // 定义响应式数据
 const currentValue = ref(0);
@@ -90,7 +90,12 @@ const getRatioTextStyle = computed(() => {
     fontSize: `${fontSize}px`,
   };
 });
-
+/**
+ * 文本跳转
+ */
+function textClick(text) {
+  handleClick({value:text});
+}
 // 生命周期钩子
 onMounted(() => {
   queryData();
@@ -131,6 +136,10 @@ function initOption(data){
   }
   // update-end-author:liaozhiyang date:2023-12-1 for:【QQYUN-7230】数值组件加上标题极其样式
 };
+
+defineExpose({
+  queryData
+});
 </script>
 
 <style scoped lang="scss">

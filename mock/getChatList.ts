@@ -1,9 +1,17 @@
 // mock/getChatLists.js
 import Mock from 'mockjs'
+import { readFileSync } from 'fs'
+import path from 'path'
+import { parse } from 'dotenv'
+// 指定 .env 文件路径
+const envPath = path.resolve(__dirname, '../env/.env')
+const envContent = readFileSync(envPath, 'utf8')
+const parsedEnv = parse(envContent)
+const proxyPrefix = parsedEnv.VITE_APP_PROXY_PREFIX ?? '/api'
 
 export default [
   {
-    url: '/api/eoa/im/newApi/getChatList',
+    url: `${proxyPrefix}/eoa/im/newApi/getChatList`,
     method: 'get', // 或 post
     response: () => {
       return Mock.mock({
@@ -38,7 +46,7 @@ export default [
     },
   },
   {
-    url: '/api/eoa/im/newApi/creatFriendSession',
+    url: `${proxyPrefix}/eoa/im/newApi/creatFriendSession`,
     method: 'post', // 或 post
     response: () => {
       return Mock.mock({
@@ -85,7 +93,7 @@ export default [
     },
   },
   {
-    url: '/api/eoa/im/newApi/creatFriendSession',
+    url: `${proxyPrefix}/eoa/im/newApi/creatFriendSession`,
     method: 'post', // 或 post
     response: () => {
       return Mock.mock({
@@ -96,7 +104,7 @@ export default [
     },
   },
   {
-    url: '/api/eoa/im/newApi/sendMessage',
+    url: `${proxyPrefix}/eoa/im/newApi/sendMessage`,
     method: 'post', // 或 post
     response: () => {
       return Mock.mock({

@@ -2,12 +2,19 @@
 
 <template>
   <view class="chat-item">
-    <text class="chat-time" v-if="item.sendTime && item.sendTime.length">
-      {{ item.sendTime }}
+    <text
+      class="chat-time"
+      v-if="item.sendTime && item.sendTime.length && !['systemMessage'].includes(item.msgType)"
+    >
+      {{ item.sendTime?.substring(0, 19) }}
     </text>
-    <view :class="{ 'chat-container': true, 'chat-location-me': isMe(item) }">
+    <!--系统消息-->
+    <template v-if="['systemMessage'].includes(item.msgType)">
+      <view class="chat-systemMessage">{{ item.msgData }}</view>
+    </template>
+    <view v-else :class="{ 'chat-container': true, 'chat-location-me': isMe(item) }">
       <view class="chat-icon-container">
-        <image class="chat-icon" :src="item.fromAvatar" mode="aspectFill" />
+        <image class="chat-icon" :src="getFileAccessHttpUrl(item.fromAvatar)" mode="aspectFill" />
       </view>
       <view class="chat-content-container">
         <text :class="{ 'chat-user-name': true, 'chat-location-me': isMe(item) }">
@@ -23,9 +30,9 @@
           <!---文字-->
           <template v-if="['text'].includes(item.msgType)">
             <view :class="{ 'chat-text-container': true, 'chat-text-container-me': isMe(item) }">
-              <text :class="{ 'chat-text': true, 'chat-text-me': isMe(item) }">
+              <view :class="{ 'chat-text': true, 'chat-text-me': isMe(item) }">
                 <rich-text :nodes="item.msgData"></rich-text>
-              </text>
+              </view>
             </view>
           </template>
           <!--图片-->
@@ -35,6 +42,7 @@
               height="200"
               :enable-preview="true"
               :radius="10"
+              mode="widthFix"
               :src="getFileAccessHttpUrl(item.msgData)"
             ></wd-img>
           </template>
@@ -104,6 +112,12 @@ const playVoice = (item) => {
   text-align: center;
   font-size: 22upx;
   color: #aaaaaa;
+}
+.chat-systemMessage {
+  padding: 4upx 0upx;
+  text-align: center;
+  font-size: 22upx;
+  color: #979191;
 }
 .chat-container {
   display: flex;

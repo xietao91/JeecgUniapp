@@ -1,22 +1,24 @@
 <template>
-    <wd-upload
-      v-model:file-list="fileList"
-      :accept="uploadFileType"
-      :upload-method="customUpload"
-      :disabled="disabled"
-      :before-remove="delFile"
-    ></wd-upload>
+  <wd-upload
+    v-model:file-list="fileList"
+    accept="image"
+    :upload-method="customUpload"
+    :disabled="disabled"
+    :limit="maxNum"
+    :before-remove="delFile"
+    :multiple="maxNum && maxNum > 1"
+  ></wd-upload>
 </template>
 
 <script lang="ts" setup>
-import type { UploadMethod } from '@/uni_modules/wot-design-uni/components/wd-upload/types'
-import { getEnvBaseUploadUrl } from '@/utils'
+import type { UploadMethod } from 'wot-design-uni/components/wd-upload/types'
+import { getEnvBaseUploadUrl, getEnvBaseUrl } from '@/utils'
 import { useUserStore } from '@/store'
 import { getFileAccessHttpUrl } from '@/common/uitls'
-import {isString} from "@/utils/is";
-import {useToast} from "wot-design-uni";
+import { isString } from '@/utils/is'
+import { useToast } from 'wot-design-uni'
 const toast = useToast()
-const VITE_UPLOAD_BASEURL = `${getEnvBaseUploadUrl()}`
+const VITE_UPLOAD_BASEURL = `${getEnvBaseUrl()}/sys/common/upload`
 // 接收 props
 const props = defineProps({
   title: {
@@ -37,6 +39,10 @@ const props = defineProps({
     type: String,
     default: '',
     required: false,
+  },
+  maxNum: {
+    type: Number,
+    default: null,
   },
   uploadFileType: {
     type: String,
@@ -71,20 +77,20 @@ const customUpload: UploadMethod = (file, formData, options) => {
     filePath: file.url,
     success(res: any) {
       if (res.statusCode === options.statusCode) {
-        let data = res.data;
+        let data = res.data
         if (data && isString(data)) {
-            data = JSON.parse(data)
+          data = JSON.parse(data)
         }
         // 设置上传成功
         if (data && data.success) {
-            const file = {
-                id: new Date().getTime(),
-                name: options.name,
-                path: data.message,
-                url: getFileAccessHttpUrl(data.message),
-            }
-            fileList.value.unshift(file)
-            changeOnlineFormValue()
+          const file = {
+            id: new Date().getTime(),
+            name: options.name,
+            path: data.message,
+            url: getFileAccessHttpUrl(data.message),
+          }
+          fileList.value.unshift(file)
+          changeOnlineFormValue()
         }
       } else {
         // 设置上传失败
@@ -104,7 +110,7 @@ const customUpload: UploadMethod = (file, formData, options) => {
 }
 
 const changeOnlineFormValue = () => {
-    console.log('changeOnlineFormValue fileList.value', fileList)
+  console.log('changeOnlineFormValue fileList.value', fileList)
   const arr = fileList.value.map((item) => item['path'])
   const str = arr.join(',')
   emit('change', str)

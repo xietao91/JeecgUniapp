@@ -942,6 +942,173 @@ export function calcTotal(summaryConfig,rawData,config){
     return ''
 }
 /**
+ * 设置图例距离(为了使用百分比需要特殊处理)
+ */
+export function setLegendTop(chartOption,config) {
+    if (chartOption?.legend) {
+        chartOption.legend.top = (config.option?.legend?.t || 2 ) + '%';
+        chartOption.legend.right = (config.option?.legend?.r || 4) + '%';
+        if(chartOption.legend?.data && isArray(chartOption.legend?.data ) && chartOption.legend?.data.length==0){
+            chartOption.legend.data = null;
+        }
+    }
+}
+/**
+ * 设置数值坐标轴的显示单位
+ */
+export function setValueAxisUnit(options) {
+    if (options?.yAxis) {
+        try {
+            //双轴图
+            if(isArray(options?.yAxis)){
+                options?.yAxis.forEach(item=>{
+                    if (item?.type && item?.type == 'value') {
+                        if(item?.axisLabel){
+                            item.axisLabel.formatter = (value)=>{
+                                return getAxisUnit(value,item?.yUnit)
+                            }
+                        }
+                    }
+                })
+            }else{
+                if (options.yAxis?.type && options.yAxis?.type == 'value') {
+                    if(options.yAxis?.axisLabel){
+                        options.yAxis.axisLabel.formatter = (value)=>{
+                            return getAxisUnit(value,options.yAxis?.yUnit)
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.info('数值坐标轴的显示单位异常:', e);
+        }
+    }
+    return options;
+}
+/**
+ *计算数值坐标单位
+ * @param value
+ * @param unit
+ */
+export function getAxisUnit(value,unit) {
+    if(unit){
+        if(unit=='K'){
+            return (value / 1000) + 'K';
+        }
+        if(unit=='W'){
+            return (value / 10000) + '万';
+        }
+        if(unit=='M'){
+            return (value / 100000000) + '亿';
+        }
+    }
+    return value;
+}
+/**
+ * 自定义配置
+ * @param option
+ */
+export function commonOption(option,config?){
+    //内容格式化
+    if(option?.label){
+        if(isArray(option.series)){
+            option.series.forEach((item,index)=>{
+                if(option?.label?.format && item?.label){
+                    item.label['formatter'] = option.label.format;
+                }else{
+                    item.label['formatter']= '{c}'
+                }
+            })
+        }
+    }
+    //双轴图数值设置修改，只有第一个元素的数值显示
+    //update-begin-author:liusq---date:2025-01-10--for: QQYUN-10716 表单设计器对接 大屏 双轴图显示数值 只有第一个显示了
+    if(option?.tempCompName=='DoubleLineBar'){
+        if(isArray(option.series)){
+            option.series.forEach((item)=>{
+                item['label'] = {...option.series[0]?.label};
+            })
+        }
+    }
+    //update-end-author:liusq---date:2025-01-10--for:  QQYUN-10716 表单设计器对接 大屏 双轴图显示数值 只有第一个显示了
+
+    //显示辅助线的配置
+    if(config && config?.markLineConfig){
+        let data = [];
+        if(config?.markLineConfig?.show){
+            if(isArray(config?.markLineConfig?.markLine) && config?.markLineConfig?.markLine.length>0){
+                data = config.markLineConfig.markLine.map(item=>{
+                    //设置临时组件名，便于区分双轴图
+                    item['compName'] = option?.tempCompName;
+                    let markLineValue = getMarkLineValue(item,option.tempData);
+                    let lineObj = {
+                        yAxisType: item?.yAxis,
+                        name: item.name,
+                        lineStyle: {
+                            type: item.auxiliaryLine || 'dashed',
+                            color: item.auxiliaryLineColor || 'red'
+                        },
+                        label: {
+                            position: 'insideEndTop',
+                            fontSize: item.fontSize,
+                            formatter: `${item.name}:${markLineValue}`
+                        }
+                    }
+                    //计算辅助线数值
+                    if(option?.yAxis && option?.yAxis?.type && option?.yAxis?.type=='category'){
+                        lineObj['xAxis'] = markLineValue || 0;
+                    }else{
+                        lineObj['yAxis'] = markLineValue || 0;
+                    }
+                    return lineObj
+                })
+            }
+        }
+        option.series.forEach(item=>{
+            //判断有没有坐标轴设置
+            if(isNullOrUnDef(item?.yAxisIndex)){
+                item['markLine'] = { symbol: ['none', 'none'],data}
+            }else{
+                let yAxisType = item?.yAxisIndex==1?'right':'left';
+                let filterData = data.filter(a=>a.yAxisType==yAxisType);
+                item['markLine'] = { symbol: ['none', 'none'],data:filterData}
+            }
+        })
+    }
+    option['tempData'] = null;
+    option['tempCompName'] = null;
+    return option
+}
+/**
+ * 获取辅助线设置数值
+ * @param item 配置
+ * @param data 数值
+ */
+function getMarkLineValue(item,data){
+    let value = item?.value || 0
+    if(item.type == 'dynamic' && data && isArray(data)){
+        let finalData = data.map(d=>d?.value || 0);
+        if(item?.yAxis && item?.compName){
+            if(item?.yAxis=='right'){
+                finalData = data.filter(a=>a.yAxisIndex == '1').map(d=>d?.value || 0);
+            }else{
+                finalData = data.filter(a=>a.yAxisIndex == '0').map(d=>d?.value || 0);
+            }
+        }
+        if(item.auxiliaryType =='avg'){
+            const sum = finalData.reduce((acc, num) => acc + num, 0);
+            value = Math.floor(sum / finalData.length);
+        }
+        if(item.auxiliaryType =='max'){
+            value = Math.max(...finalData);
+        }
+        if(item.auxiliaryType =='min'){
+            value = Math.min(...finalData);
+        }
+    }
+    return value
+}
+/**
  * 处理总计和显示单位
  * @param {Object} compName
  * @param {Object} chartOption
@@ -1079,9 +1246,9 @@ function otherConfig(chartOption){
         bottom:60
     }
     //设置图例位置
-    chartOption.legend = {
-        bottom:15
-    }
+    // chartOption.legend = {
+    //     bottom:15
+    // }
     //设置提示层级
     chartOption.tooltip && (chartOption.tooltip.extraCssText ='z-index:9');
     return chartOption
@@ -1474,7 +1641,7 @@ function handleData(props,rawData,chartData) {
     //显示行汇总
     if (showLineTotal && rawData.value.length>0) {
         lineTotalObj['colSpan'] = nameFields.length;
-        if (lineSummary.location == '1') {
+        if (lineSummary?.location == '1') {
             dataSource.unshift(lineTotalObj);
         } else {
             dataSource.push(lineTotalObj);
@@ -1507,12 +1674,19 @@ export function addImgPrefix (imgUrl){
  * @param url
  */
 export function checkUrlPrefix(url) {
+    let currentProtocol = 'https'
+    let urlProtocol;
+    //#ifdef H5
     // 获取当前页面的协议
-    const currentProtocol = window.location.protocol;
+    currentProtocol = window.location.protocol;
     // 获取传入 url 的协议
     const urlObj = new URL(url);
-    const urlProtocol = urlObj.protocol;
+    urlProtocol = urlObj.protocol;
+    //#endif
 
+    //#ifndef H5
+    urlProtocol = getProtocolWithRegex(url)
+    //#endif
     // 判断协议是否一致
     const isDiffProtocol = currentProtocol.startsWith('https') &&  currentProtocol != urlProtocol;
     // 返回当前页面的协议
@@ -1520,6 +1694,15 @@ export function checkUrlPrefix(url) {
         isDiffProtocol: isDiffProtocol,
         currentProtocol: currentProtocol
     };
+}
+
+/**
+ * 获取协议
+ * @param urlString
+ */
+function getProtocolWithRegex(urlString) {
+    const protocolMatch = urlString.match(/^([a-zA-Z]+):\/\//);
+    return protocolMatch ? protocolMatch[1] : null;
 }
 /**
  * 字典转换

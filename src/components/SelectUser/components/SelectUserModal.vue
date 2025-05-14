@@ -27,7 +27,7 @@
           <template v-if="multi">
             <wd-checkbox-group shape="square" v-model="checkedValue">
               <template v-for="(item, index) in dataList" :key="index">
-                <view class="list" @click="hanldeCheck(index, item.username)">
+                <view class="list" @click="hanldeCheck(index, item[rowKey])">
                   <view class="left text-gray-5">
                     <wd-img
                       custom-class="avatar"
@@ -42,7 +42,11 @@
                     </view>
                   </view>
                   <view class="right" @click.stop>
-                    <wd-checkbox ref="checkboxRef" :modelValue="item.username"></wd-checkbox>
+                    <wd-checkbox
+                      ref="checkboxRef"
+                      :disabled="readonlyUser.includes(item[rowKey])"
+                      :modelValue="item[rowKey]"
+                    ></wd-checkbox>
                   </view>
                 </view>
               </template>
@@ -52,7 +56,7 @@
             <wd-radio-group shape="dot" v-model="checkedValue">
               <template v-for="(item, index) in dataList" :key="index">
                 <wd-cell>
-                  <view class="list" @click="hanldeCheck(index, item.username)">
+                  <view class="list" @click="hanldeCheck(index, item[rowKey])">
                     <view class="left text-gray-5">
                       <wd-img
                         custom-class="avatar"
@@ -67,7 +71,7 @@
                       </view>
                     </view>
                     <view class="right" @click.stop>
-                      <wd-radio :value="item.username"></wd-radio>
+                      <wd-radio :value="item[rowKey]"></wd-radio>
                     </view>
                   </view>
                 </wd-cell>
@@ -105,9 +109,29 @@ const props = defineProps({
   maxSelectCount: {
     type: Number,
   },
+  // 这是用户id
   selected: {
     type: [Array, String],
     default: '',
+  },
+  // 这是用户id（只是默认勾选，在弹窗中勾选）
+  defaultSelectedValue: {
+    type: [Array, String],
+    default: '',
+  },
+  // 这是用户全数据（项包含id，username、realname）
+  selectedUser: {
+    type: Array,
+    default: () => [],
+  },
+  rowKey: {
+    type: String,
+    default: 'username',
+  },
+  // 只读用户
+  readonlyUser: {
+    type: Array,
+    default: [],
   },
 })
 const emit = defineEmits(['change', 'close'])
@@ -134,7 +158,7 @@ const handleClose = () => {
 }
 const handleConfirm = () => {
   if (checkedValue.value.length == 0) {
-    toast.warning('还没选择~')
+    toast.warning('还没选择用户~')
     return
   }
   const result = []
@@ -142,9 +166,25 @@ const handleConfirm = () => {
   if (!Array.isArray(checkedValue.value)) {
     value = [checkedValue.value]
   }
-  value.forEach((username, index) => {
-    const findIndex = dataList.value.findIndex((item) => item['username'] === username)
-    result.push(dataList.value[findIndex])
+  value.forEach((rowKey, index) => {
+    const findIndex = dataList.value.findIndex((item) => item[props.rowKey] === rowKey)
+    if (findIndex == -1) {
+      // 传进来选中的用户可能在第二页（还没加载进来）
+      const index = props.selectedUser.findIndex((item) => item[props.rowKey] === rowKey)
+      if (index != -1) {
+        result.push(props.selectedUser[index])
+      } else {
+        // 传进来defaultSelectedValue的用户可能在第二页（还没加载进来）
+        if (isArray(props.defaultSelectedValue)) {
+          const index = props.defaultSelectedValue.findIndex((item) => item === rowKey)
+          index != -1 && result.push({ [props.rowKey]: props.defaultSelectedValue[index] })
+        } else {
+          props.defaultSelectedValue == rowKey && result.push({ [props.rowKey]: rowKey })
+        }
+      }
+    } else {
+      result.push(dataList.value[findIndex])
+    }
   })
   show.value = false
   emit('change', result)
@@ -223,6 +263,22 @@ const init = () => {
         checkedValue.value = props.selected.join(',')
       }
     }
+  } else {
+    if (props.defaultSelectedValue.length) {
+      if (props.multi) {
+        if (isArray(props.defaultSelectedValue)) {
+          checkedValue.value = props.defaultSelectedValue
+        } else if (isString(props.defaultSelectedValue)) {
+          checkedValue.value = props.defaultSelectedValue.split(',')
+        }
+      } else {
+        if (isString(props.defaultSelectedValue)) {
+          checkedValue.value = props.defaultSelectedValue
+        } else if (isArray(props.defaultSelectedValue)) {
+          checkedValue.value = props.defaultSelectedValue.join(',')
+        }
+      }
+    }
   }
 }
 init()
@@ -256,7 +312,7 @@ init()
     display: flex;
     align-items: center;
     text-align: left;
-    .avatar {
+    :deep(.avatar) {
       margin-right: 8px;
       background-color: #e9e9e9;
     }

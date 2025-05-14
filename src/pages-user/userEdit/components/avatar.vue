@@ -74,7 +74,7 @@ const handleUpload = () => {
     ([loading, err, data], oldValue) => {
       if (loading == false) {
         if (err) {
-          toast.warning('修改失败')
+          // toast.warning('修改失败')
         } else {
           if (data) {
             emit('update:modelValue', data.message)

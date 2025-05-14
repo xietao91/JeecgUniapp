@@ -6,6 +6,48 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "4519495",
+      "name": "清除",
+      "font_class": "close",
+      "unicode": "e653",
+      "unicode_decimal": 58963
+    },
+    {
+      "icon_id": "23191220",
+      "name": "文件",
+      "font_class": "link",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "34833980",
+      "name": "个人",
+      "font_class": "person",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "6241501",
+      "name": "删除",
+      "font_class": "remove",
+      "unicode": "e627",
+      "unicode_decimal": 58919
+    },
+    {
+      "icon_id": "9647671",
+      "name": "新增",
+      "font_class": "newAdd",
+      "unicode": "e665",
+      "unicode_decimal": 58981
+    },
+    {
+      "icon_id": "201648",
+      "name": "3.1 时间",
+      "font_class": "31shijian",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
       "icon_id": "1727436",
       "name": "211铃铛-线性",
       "font_class": "message",

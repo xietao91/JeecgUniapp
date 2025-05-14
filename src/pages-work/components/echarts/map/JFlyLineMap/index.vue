@@ -1,16 +1,31 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <!-- #ifdef APP-PLUS || H5 -->
-<!--    <EchartsMap-->
-<!--      v-else-->
-<!--      v-model:option="option"-->
-<!--      v-model:map="mapObject"-->
-<!--      v-model:echartId="echartId"-->
-<!--    />-->
+    <!-- #ifdef H5 -->
+    <EchartsMap
+      v-else
+      v-model:option="option"
+      v-model:map="mapObject"
+      v-model:echartId="echartId"
+    />
     <!-- #endif -->
-    <!-- #ifdef APP-PLUS || H5 || MP-WEIXIN -->
-    <echartsUniapp v-else :option="option" :mapName="mapName" :mapData="mapDataJson"></echartsUniapp>
+
+    <!-- #ifdef MP-WEIXIN -->
+    <echartsUniapp v-else :option="option" :mapName="mapName" :mapData="mapDataJson"  :chartData="dataSource" :config="config" :id="id"></echartsUniapp>
+    <!-- #endif -->
+
+    <!-- #ifdef APP-PLUS -->
+    <view class="component-echarts">
+      <view
+          class="echarts"
+          id="flyline-echart"
+          :prop="option"
+          :mapObj="mapObject"
+          :change:prop="ModuleInstance.setOption"
+          :change:mapObj="ModuleInstance.setMap"
+          :style="{ height: `${height}rpx` }"
+      ></view>
+    </view>
     <!-- #endif -->
   </view>
 </template>
@@ -18,7 +33,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
 import { echartProps } from '@/pages-work/components/echarts/props'
-import EchartsMap from '../index.vue'
+import EchartsMap from '../mapIndex.vue'
 import echartsUniapp from "../../index.vue";
 import { merge } from 'lodash-es';
 import {
@@ -33,8 +48,9 @@ const props = defineProps({
   ...echartProps,
 })
 // 定义响应式数据
-const option = ref({})
-const chartOption = ref({
+const option = ref<any>({})
+//基础配置
+const chartOption = ref<any>({
   geo: {
     map: '',
     itemStyle: {},
@@ -60,13 +76,13 @@ let [
     getToConvertData,
   },
 ] = useChartHook(props, initOption)
-const echartId = ref('')
+const echartId = ref<any>('')
 // 计算属性
-const mapObject = computed(() => ({ code: getAreaCode.value, data: mapDataJson.value }))
+const mapObject = computed(() => ({ code: 'flyline:'+getAreaCode.value, data: mapDataJson.value }))
 // 初始化配置选项
 async function initOption(data) {
   let chartData = dataSource.value
-  let mapName = await registerMap()
+  let mapName = 'flyline:'+ await registerMap()
   try {
     chartOption.value.geo.map = mapName;
     let colorArr = getColors();
@@ -122,7 +138,7 @@ async function initOption(data) {
           period: config?.commonOption?.effect?.period || 1,//动画时长
           trailLength: config?.commonOption?.effect?.trailLength,//特效尾迹
           symbolSize: config.commonOption?.effect?.symbolSize,//标记大小
-          color: config?.commonOption?.effect?.markerColor || 'auto',//标记颜色
+          color: config?.commonOption?.effect?.markerColor || '#ffffff',//标记颜色
           symbol: config?.commonOption?.effect?.markerShape || planePath,//标记形状
         },
         lineStyle: {
@@ -156,7 +172,7 @@ async function initOption(data) {
           return val[2] / 10;
         },
         data: fromConvertData.map((item,index)=>{
-          return {...item,label:{color:colorArr[index]|| 'auto'}, itemStyle:{color:colorArr[index] || colorArr[2] || 'auto'}}
+          return {...item,label:{color:colorArr[index]|| '#ffffff'}, itemStyle:{color:colorArr[index] || colorArr[2] || '#ffffff'}}
         }),
       },
       {
@@ -178,7 +194,7 @@ async function initOption(data) {
           return val[2] / 10;
         },
         data: getToConvertData(chartData).map((item,index)=>{
-          return {...item,label:{color:colorArr[index]|| 'auto'},itemStyle:{color:colorArr[index]|| colorArr[1]}}
+          return {...item,label:{color:colorArr[index]|| '#ffffff'},itemStyle:{color:colorArr[index]|| colorArr[1]}}
         }),
       },
     ];
@@ -201,7 +217,7 @@ async function initOption(data) {
       chartOption.value.visualMap.max = maxValue;
     }
     if (chartOption.value?.visualMap?.top) {
-      chartOption.value.visualMap.top = 'auto';
+      chartOption.value.visualMap.top = '1%';
       chartOption.value.visualMap.bottom = '1%';
     }
     setTimeout(() => {
@@ -255,10 +271,98 @@ onMounted(async () => {
   await queryCityCenter()
   await queryData()
 })
+defineExpose({
+  queryData
+});
 </script>
+<!-- #ifdef APP-PLUS -->
+<script module="ModuleInstance" lang="renderjs">
+export default {
+  data() {
+    return {
+      flylineChart: null,
+      mapData: null,
+	    myflylineEchart: null
+    };
+  },
+  methods: {
+    // 初始化 ECharts
+    initEchart() {
+      if (this.flylineChart) return; // 避免重复初始化
 
-<style>
+      // 1. 获取 DOM 元素（APP 端可以直接用 document.getElementById）
+      const dom = document.getElementById('flyline-echart');
+
+      if (!dom) {
+        console.error("ECharts DOM 元素未找到！");
+        return;
+      }
+
+      if (this.mapData.code) {
+	   // 2. 初始化 ECharts
+	    this.flylineChart = this.myflylineEchart.init(dom);
+		// 3. 注册地图数据（如果有）
+        this.myflylineEchart.registerMap(this.mapData.code, this.mapData.data);
+		// 4. 设置图表配置
+		this.flylineChart.setOption(this.option || {});
+
+		// 5. 监听窗口变化，自动调整大小
+		window.addEventListener('resize', () => this.flylineChart.resize());
+      }
+    },
+    // 更新 option
+    setOption(newValue) {
+      if (!this.flylineChart) {
+        this.initEchart(); // 如果未初始化，先初始化
+        return;
+      }
+      this.flylineChart.setOption(newValue || {});
+    },
+
+    // 设置地图数据
+    setMap(newValue) {
+      this.mapData = newValue;
+      if (this.flylineChart && this.mapData) {
+        this.myflylineEchart.registerMap(this.mapData.code, this.mapData.data);
+        this.flylineChart.setOption(this.option || {});
+      }else{
+		this.initEchart();
+	  }
+    }
+  },
+  mounted() {
+    if (this.myflylineEchart === null) {
+      const script = document.createElement('script');
+      script.src = 'uni_modules/lime-echart/static/echarts.js';
+      script.onload = () => {
+          this.myflylineEchart = echarts; // 挂载到window
+          this.initEchart();
+      };
+      document.head.appendChild(script);
+    } else {
+      this.initEchart();
+    }
+  },
+  beforeDestroy() {
+    // 销毁图表，防止内存泄漏
+    if (this.flylineChart) {
+      this.flylineChart.dispose();
+      window.removeEventListener('resize', () => this.flylineChart.resize());
+    }
+  }
+};
+</script>
+<!-- #endif -->
+
+<style  lang="scss"  scoped>
 .content {
   margin: 5px;
+}
+.component-echarts {
+  width: 100%;
+  .echarts {
+    width: 100%;
+    min-height: 300px;
+  }
 }
 </style>

@@ -24,6 +24,10 @@ export default defineManifestConfig({
   /* 5+App特有相关 */
   'app-plus': {
     usingComponents: true,
+    webView: {
+      render: 'always',
+      userAgent: '',
+    },
     nvueStyleCompiler: 'uni-app',
     compilerVersion: 3,
     compatible: {
@@ -46,7 +50,7 @@ export default defineManifestConfig({
     distribute: {
       /* android打包配置 */
       android: {
-        minSdkVersion: 30,
+        minSdkVersion: 26,
         targetSdkVersion: 30,
         abiFilters: ['armeabi-v7a', 'arm64-v8a'],
         permissions: [
@@ -121,9 +125,11 @@ export default defineManifestConfig({
     appid: VITE_WX_APPID,
     setting: {
       urlCheck: false,
-	  minified: true
+      minified: true,
+      es6: true,
     },
     usingComponents: true,
+    lazyCodeLoading: 'requiredComponents',
     // __usePrivacyCheck__: true,
   },
   'mp-alipay': {
@@ -143,8 +149,8 @@ export default defineManifestConfig({
     sdkConfigs: {
       maps: {
         amap: {
-          key: '21f194a0d33197f874f7bbdd198419be',
-          securityJsCode: 'a46b425f31a4de445b2966d998fba851',
+          key: '20854e7d231ee339bfa3b277c840070c',
+          securityJsCode: '7a542edee4a82e56ed88fef8ef42b5a5',
           serviceHost: '',
         },
       },

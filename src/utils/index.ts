@@ -215,3 +215,21 @@ export function formatDate(value, fmt) {
     return value
   }
 }
+/**
+ * 轮询获取 ref 对象的值，获取为true或是真实存在 就执行下一步逻辑，可用于判断状态或组件的加载是否完成
+ * @param componentRef
+ */
+export function getRefPromise(componentRef) {
+  return new Promise((resolve) => {
+    (function next() {
+      let ref = componentRef.value;
+      if (ref) {
+        resolve(ref);
+      } else {
+        setTimeout(() => {
+          next();
+        }, 100);
+      }
+    })();
+  });
+}

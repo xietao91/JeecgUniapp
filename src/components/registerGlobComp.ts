@@ -33,6 +33,8 @@ import JBubbleMap from '@/pages-work/components/echarts/map/JBubbleMap/index.vue
 import JBarMap from '@/pages-work/components/echarts/map/JBarMap/index.vue';
 import JHeatMap from '@/pages-work/components/echarts/map/JHeatMap/index.vue';
 import JFlyLineMap from '@/pages-work/components/echarts/map/JFlyLineMap/index.vue';
+import JTotalFlyLineMap from '@/pages-work/components/echarts/map/TotalFlyLineMap/index.vue';
+import JTotalBarMap from '@/pages-work/components/echarts/map/TotalBarMap/index.vue';
 
 //非echart组件
 import JCarousel from '@/pages-work/components/drag/carousel/index.vue';
@@ -47,6 +49,8 @@ import JList from '@/pages-work/components/drag/list/index.vue';
 import JRadioButton from '@/pages-work/components/drag/radiobutton/index.vue';
 import JCommonTable from '@/pages-work/components/drag/table/index.vue';
 import JQuickNav from '@/pages-work/components/drag/JQuickNav/index.vue';
+import JForm from '@/pages-work/components/drag/form/index.vue';
+
 
 // 全局注册组件
 export function registerGlobComp(app: App) {
@@ -84,6 +88,8 @@ export function registerGlobComp(app: App) {
   app.component('JBarMap', JBarMap)
   app.component('JHeatMap', JHeatMap)
   app.component('JFlyLineMap', JFlyLineMap)
+  app.component('JTotalFlyLineMap', JTotalFlyLineMap)
+  app.component('JTotalBarMap', JTotalBarMap)
 
   //非echart组件
   app.component('JCarousel', JCarousel)
@@ -98,4 +104,6 @@ export function registerGlobComp(app: App) {
   app.component('JRadioButton', JRadioButton)
   app.component('JCommonTable', JCommonTable)
   app.component('JQuickNav', JQuickNav)
+  app.component('JForm', JForm)
+
 }

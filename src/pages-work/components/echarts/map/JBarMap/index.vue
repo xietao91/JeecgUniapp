@@ -1,11 +1,27 @@
 <template>
   <view class="content">
     <statusTip v-if="pageTips.show" :status="pageTips.status"></statusTip>
-    <!-- #ifdef APP-PLUS || H5 -->
-<!--    <EchartsMap v-else v-model:option="option" v-model:map="mapObject" v-model:echartId="echartId" />-->
+    <!-- #ifdef H5 -->
+    <EchartsH5 v-else :option="option" :map="mapObject" :echartId="echartId" />
     <!-- #endif -->
-    <!-- #ifdef APP-PLUS || H5 || MP-WEIXIN -->
-    <echartsUniapp v-else :option="option" :mapName="mapName" :mapData="mapDataJson"></echartsUniapp>
+
+    <!-- #ifdef MP-WEIXIN -->
+    <echartsUniapp v-else :option="option" :mapName="mapName" :mapData="mapDataJson" :chartData="dataSource" :config="config" :id="id"></echartsUniapp>
+    <!-- #endif -->
+
+
+    <!-- #ifdef APP-PLUS -->
+    <view class="component-echarts">
+      <view
+          class="echarts"
+          id="bar-map-chart"
+          :prop="option"
+          :mapObj="mapObject"
+          :change:prop="ModuleInstance.setOption"
+          :change:mapObj="ModuleInstance.setMap"
+          :style="{ height: `${height}rpx` }"
+      ></view>
+    </view>
     <!-- #endif -->
   </view>
 </template>
@@ -13,7 +29,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { echartProps } from '@/pages-work/components/echarts/props'
-import EchartsMap from "../index.vue";
+import EchartsH5 from "../mapIndex.vue";
 import echartsUniapp from "../../index.vue";
 import {deepMerge, handleTotalAndUnit, disposeGridLayout, getGeoCoordMap} from '../../../common/echartUtil'
 import useChartHook from '@/pages-work/components/hooks/useEchartMap'
@@ -37,21 +53,22 @@ const chartOption = ref({
     formatter: null
   }
 });
-let [{ dataSource, reload, pageTips, config,mapDataJson,mapName,getAreaCode,city_point },
+const mapName = ref("");
+let [{ dataSource, reload, pageTips, config,mapDataJson,getAreaCode,city_point },
   { queryData,registerMap,setGeoAreaColor,handleTotalAndUnitMap,handleCommonOpt,queryCityCenter}] = useChartHook(props, initOption)
 const echartId = ref("");
 // 地图属性
-const mapObject = computed(() => ({ code: getAreaCode.value, data: mapDataJson.value }));
+const mapObject = computed(() => ({ code: 'barmap:'+getAreaCode.value, data: mapDataJson.value }));
 
 // 初始化配置选项
 let geoCoordMap = {};
 async function initOption(data){
   let chartData = dataSource.value;
-  let mapName = await registerMap();
+  mapName.value = 'barmap:'+ await registerMap();
   try {
     // 使用 registerMap 注册的地图名称
     geoCoordMap = getGeoCoordMap(mapDataJson.value);
-    chartOption.value.geo.map = mapName;
+    chartOption.value.geo.map = mapName.value;
     let barSize = config?.commonOption?.barSize || 17;
     let barColor = config?.commonOption?.barColor || '#F8E71C';
     let barColor2 = config?.commonOption?.barColor2 || '#F8E71C';
@@ -225,10 +242,10 @@ async function initOption(data){
       chartOption.value = handleTotalAndUnitMap(props.compName, chartOption.value, props.config, chartData);
       chartOption.value = handleCommonOpt(chartOption.value);
       setTimeout(() => {
+        pageTips.show = false
+        echartId.value = props.i
         option.value = { ...chartOption.value };
         console.log("柱形地图option.value", option.value);
-        pageTips.show = false;
-        echartId.value = props.i;
       }, 300);
     }
     if (dataSource.value && dataSource.value.length === 0) {
@@ -292,10 +309,102 @@ onMounted(async () => {
   await queryCityCenter()
   await queryData();
 });
+defineExpose({
+  queryData
+});
 </script>
 
-<style>
+<!-- #ifdef APP-PLUS -->
+<script module="ModuleInstance" lang="renderjs">
+export default {
+  data() {
+    return {
+      barMapChart: null,
+      mapData: null,
+	  myBarEchart: null,
+    };
+  },
+  methods: {
+    // 初始化 ECharts
+    initEchart() {
+      if (this.barMapChart) return; // 避免重复初始化
+
+      // 1. 获取 DOM 元素（APP 端可以直接用 document.getElementById）
+      const dom = document.getElementById(this.echartId || 'bar-map-chart');
+	  console.error("柱形图dom",dom);
+
+      if (!dom) {
+        console.error("JBarMap DOM 元素未找到！");
+        return;
+      }
+
+     if (this.mapData.code) {
+      // 2. 初始化 ECharts
+       this.barMapChart = this.myBarEchart.init(dom);
+		// 3. 注册地图数据（如果有）
+       this.myBarEchart.registerMap(this.mapData.code, this.mapData.data);
+	   // 4. 设置图表配置
+	   this.barMapChart.setOption(this.option || {});
+
+	   // 5. 监听窗口变化，自动调整大小
+	   window.addEventListener('resize', () => this.barMapChart.resize());
+     }
+    },
+    // 更新 option
+    setOption(newValue) {
+      if (!this.barMapChart) {
+        this.initEchart(); // 如果未初始化，先初始化
+        return;
+      }
+      this.barMapChart.setOption(newValue || {});
+    },
+
+    // 设置地图数据
+    setMap(newValue) {
+      this.mapData = newValue;
+      if (this.barMapChart && this.mapData) {
+        this.myBarEchart.registerMap(this.mapData.code, this.mapData.data);
+        this.barMapChart.setOption(this.option || {});
+      }else{
+		this.initEchart();
+	  }
+    }
+  },
+  mounted() {
+    // 确保 ECharts 已加载
+    if (this.myBarEchart  === null) {
+      const script = document.createElement('script');
+      script.src = 'uni_modules/lime-echart/static/echarts.js';
+      script.onload = () => {
+          this.myBarEchart = echarts; // 挂载到window
+          this.initEchart();
+	  };
+      document.head.appendChild(script);
+    } else {
+      this.initEchart();
+    }
+  },
+  beforeDestroy() {
+    // 销毁图表，防止内存泄漏
+    if (this.barMapChart) {
+      this.barMapChart.dispose();
+      window.removeEventListener('resize', () => this.barMapChart.resize());
+    }
+  }
+};
+</script>
+<!-- #endif -->
+
+<style lang="scss" scoped>
 .content {
   margin: 5px;
 }
+.component-echarts {
+  width: 100%;
+  .echarts {
+    width: 100%;
+    min-height: 300px;
+  }
+}
 </style>
+

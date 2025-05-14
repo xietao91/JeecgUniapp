@@ -1,14 +1,15 @@
 <template>
   <view class="CategorySelect">
-    <view @click="handleClick">
+    <view class="pickerArea" :class="{ clear: !!showText }" @click="handleClick">
       <wd-input
         :placeholder="`请选择${$attrs.label}`"
         v-bind="$attrs"
         readonly
         v-model="showText"
       ></wd-input>
+      <view v-if="!!showText && !$attrs.disabled" class="u-iconfont u-icon-close" @click.stop="handleClear"></view>
     </view>
-    <wd-popup position="bottom" v-model="popupShow">
+    <wd-popup v-if="popupShow" position="bottom" v-model="popupShow">
       <view class="content">
         <view class="operation">
           <view class="cancel text-gray-5" @click.stop="cancel">取消</view>
@@ -23,6 +24,7 @@
             :showCheckbox="multiple"
             :showRadioIcon="false"
             :checkStrictly="true"
+            :defaultCheckedKeys="defaultCheckedKeys"
             :loadApi="asyncLoadTreeData"
             @change="handleTreeChange"
           ></DaTree>
@@ -44,11 +46,6 @@ defineOptions({
 const props = defineProps({
   modelValue: {
     type: [Array, String],
-  },
-  placeholder: {
-    type: String,
-    default: '请选择',
-    required: false,
   },
   condition: {
     type: String,
@@ -81,8 +78,12 @@ const showText = ref('')
 const popupShow = ref(false)
 const treeData = ref<any[]>([])
 const treeValue = ref([])
+const attrs = useAttrs()
+const defaultCheckedKeys: any = ref([])
 const handleClick = () => {
-  popupShow.value = true
+  if (!attrs.disabled) {
+    popupShow.value = true
+  }
 }
 const cancel = () => {
   popupShow.value = false
@@ -175,24 +176,36 @@ function loadRoot() {
 // 翻译input内的值
 function loadItemByCode() {
   let value = props.modelValue
-  if (isArray(props.modelValue)) {
-    // @ts-ignore
-    value = value.join()
+  if(value){
+    if (isArray(props.modelValue)) {
+      // @ts-ignore
+      value = value.join()
+    }
+    if (value === treeData.value.map((item) => item.key).join(',')) {
+      // 说明是刚选完，内部已有翻译。不需要再请求
+      return
+    }
+    value = (value as string).trim()
+    if (value) {
+      http
+          .get(api.loadDictItem, { ids: value })
+          .then((res: any) => {
+            if (res.success) {
+              const { result = [] } = res
+              showText.value = result.join(',')
+              defaultCheckedKeys.value = value
+            } else {
+            }
+          })
+          .catch((err) => {})
+    }
   }
-  if (value === treeData.value.map((item) => item.key).join(',')) {
-    // 说明是刚选完，内部已有翻译。不需要再请求
-    return
-  }
-  http
-    .get(api.loadDictItem, { ids: value })
-    .then((res: any) => {
-      if (res.success) {
-        const { result = [] } = res
-        showText.value = result.join(',')
-      } else {
-      }
-    })
-    .catch((err) => {})
+}
+// 清空
+const handleClear = () => {
+  showText.value = ''
+  treeValue.value = []
+  confirm()
 }
 
 watch(
@@ -252,6 +265,21 @@ watch(
   :deep(.da-tree) {
     .da-tree-item__checkbox {
       // display: none;
+    }
+  }
+}
+.pickerArea {
+  position: relative;
+  .u-icon-close {
+    position: absolute;
+    right: 15px;
+    top: calc(14px + 4px);
+    color: #585858;
+    font-size: 15px;
+  }
+  &.clear {
+    :deep(.wd-input__body) {
+      padding-right: 20px;
     }
   }
 }

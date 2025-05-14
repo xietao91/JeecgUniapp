@@ -4,12 +4,23 @@
   style: {
     navigationBarTitleText: '聊天',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 
 <template>
-  <PageLayout :navTitle="navTitle" backRouteName="message" routeMethod="pushTab">
+  <PageLayout
+    :navTitle="navTitle"
+    :backRouteName="backRouteName"
+    :routeMethod="routeMethod"
+    @navBack="handleNavBack"
+    navRightTextMp="设置"
+    @navRightMp="handleGoChatSetting"
+  >
     <view class="wrap">
       <!-- prettier-ignore -->
       <z-paging ref="paging" v-model="dataList" :fixed="false" use-chat-record-mode use-virtual-list cell-height-mode="dynamic" safe-area-inset-bottom bottom-bg-color="#e5e5e5" @query="queryList" @keyboardHeightChange="keyboardHeightChange" @hidedKeyboard="hidedKeyboard">
@@ -23,6 +34,13 @@
         </template>
       </z-paging>
     </view>
+    <template #navRight>
+      <view
+        v-if="['group', 'discussion'].includes(chatObj.type)"
+        class="cuIcon-friend font-size-16px color-white"
+        @click="handleGoChatSetting"
+      ></view>
+    </template>
   </PageLayout>
 </template>
 
@@ -65,11 +83,11 @@ const toast = useToast()
 const userStore = useUserStore()
 const paging = ref(null)
 
-// 聊天对方用户信息
+// 信息
 const chatObj = ref(null)
-const navTitle = ref('')
-// 对方userid
+// 对方userid 或者 群id 或者 讨论组id
 const chatto = ref()
+const navTitle = ref('')
 const myuid = ref(userStore.userInfo.userid)
 const msgList = ref([])
 // const pageNo = ref(1)
@@ -82,6 +100,12 @@ const AUDIO = uni.createInnerAudioContext()
 const playMsgid = ref('')
 let stopWatch: any = null
 const paramsStore = useParamsStore()
+const backRouteName = ref('message')
+const routeMethod = ref('pushTab')
+const router = useRouter()
+// 是否首次加载
+let isFirstLoad = true
+let chatItemData = {}
 
 // 页面初始化
 const init = () => {
@@ -91,12 +115,25 @@ const init = () => {
     return
   }
   chatObj.value = { ...params }
+  // 对方头像、群头像、讨论组头像
   navTitle.value = params.fromUserName
+  // 对方userid 或者 群id 或者 讨论组id
   chatto.value = chatObj.value.msgTo
-  creatFriendSession(chatObj.value.msgTo)
+  chatItemData = params
+  if (params.type == 'friend') {
+    // 创建会话数据
+    creatFriendSession(chatObj.value.msgTo)
+  }
+  // 启动webSocket
   onSocketOpen()
+  // 接收消息
   onSocketReceive()
+  // 加载初始页面消息
   getMsgList()
+  if (localData.back) {
+    backRouteName.value = localData.back
+    routeMethod.value = localData.routeMethod
+  }
 }
 // 创建会话数据
 const creatFriendSession = (userId) => {
@@ -117,7 +154,8 @@ const onSocketReceive = () => {
       // 撤回了消息
       removeMsg(res)
     } else {
-      if (res.type == 'friend') {
+      // event_chat_talk
+      if (res.event.startsWith('event_chat')) {
         //聊天消息
         screenMsg(res)
         unreadClear()
@@ -130,39 +168,38 @@ const removeMsg = (data) => {
   msgList.value = arr
 }
 const screenMsg = (msg) => {
-  //消息处理
-  if (msg.msgFrom == chatto.value && msg.msgTo == myuid.value) {
+  // 消息处理
+  let reuslt = false
+  if (chatObj.value.type == 'friend') {
+    reuslt = msg.data.msgFrom == chatto.value && msg.data.msgTo == myuid.value
+  } else if (['group', 'discussion'].includes(chatObj.value.type)) {
+    reuslt = msg.data.msgFrom !== myuid.value && msg.data.msgTo == chatto.value
+  }
+  if (reuslt) {
     console.log('用户消息')
-    let time = formatDate(msg.sendTime, 'yyyy-MM-dd hh:mm:ss')
+    let time = formatDate(msg.data.sendTime, 'yyyy-MM-dd hh:mm:ss')
     let id = time.replace(/\:/g, '').replace(/\-/g, '').replace(' ', '')
-    let content = msg.msgData
-    if (msg.msgType == 'text') {
-      content = replaceEmoji(content)
-    }
-    if (msg.msgType == 'voice') {
-      content = JSON.parse(content)
-    }
-    msgList.value.push({
-      fromUserName: msg.fromUserName,
-      msgTo: msg.msgTo,
-      msgFrom: msg.msgFrom,
-      msgData: content,
-      fromAvatar: msg.fromAvatar,
-      sendTime: time,
-      msgType: msg.msgType,
-      sendTimeId: id,
-      fileName: msg.fileName,
-      id: msg.id,
-    })
+    paging.value?.addChatRecordData(
+      analysis([
+        {
+          fromUserName: msg.data.fromUserName,
+          msgTo: msg.data.msgTo,
+          msgFrom: msg.data.msgFrom,
+          msgData: msg.data.msgData,
+          fromAvatar: msg.data.fromAvatar,
+          sendTime: msg.data.sendTime,
+          msgType: msg.data.msgType,
+          sendTimeId: id,
+          fileName: msg.data.fileName,
+          id: msg.data.id,
+        },
+      ]),
+    )
     //非自己的消息震动
     if (msg.msgFrom != myuid.value) {
       console.log('振动')
       uni.vibrateLong()
     }
-    // this.$nextTick(function () {
-    //   // 滚动到底
-    //   this.scrollToView = 'msg' + id
-    // })
   }
 }
 //替换表情符号为图片
@@ -174,12 +211,12 @@ const replaceEmoji = (str) => {
 const queryList = (pageNo, pageSize) => {
   //数据库查询消息列表
   let params = {
-    type: 'friend',
+    type: chatObj.value.type,
     pageNo: pageNo,
     pageSize: pageSize,
     msgTo: chatto.value,
-    id: myuid.value,
-    sort: 'DESC',
+    // id: myuid.value,
+    // sort: 'DESC',
   }
   console.log('params', params)
   http
@@ -188,6 +225,10 @@ const queryList = (pageNo, pageSize) => {
       if (res.success && res.result?.records) {
         const records = analysis(res.result.records)
         paging.value.complete(records)
+        if (isFirstLoad) {
+          uni.$emit('chatList:unreadClear', chatItemData)
+          unreadClear()
+        }
       } else {
         paging.value.complete(false)
       }
@@ -200,7 +241,7 @@ const analysis = (data) => {
   let arr = data
   if (arr.length > 0) {
     let list = arr.map((item) => {
-      let id = item.sendTime.replace(/\:/g, '').replace(/\-/g, '').replace(' ', '')
+      let id = String(item.sendTime).replace(/\:/g, '').replace(/\-/g, '').replace(' ', '')
       item.sendTimeId = id
       let content = item.msgData
       if (item.msgType == 'text') {
@@ -279,39 +320,14 @@ const hidedKeyboard = () => {
   inputBar.value.hidedKeyboard()
 }
 const doSend = (textMsg) => {
-  // paging.value.addChatRecordData([
-  //   {
-  //     time: '',
-  //     icon: '/static/daxiong.jpg',
-  //     name: '大雄',
-  //     content: msg,
-  //     isMe: true,
-  //   },
-  // ])
-
   let content = replaceEmoji(textMsg)
   //let msg = {'text':content}
   //content = (content||'').replace(/&(?!#?[a-zA-Z0-9]+;)/g, '&amp;')
   console.log('content', content)
   let msg = textMsg
-  let time = formatDate(new Date().getTime(), 'yyyy-MM-dd hh:mm:ss')
-  let id = time.replace(/\:/g, '').replace(/\-/g, '').replace(' ', '')
   //发送
   sendMsg(msg, 'text')
-  paging.value.addChatRecordData(
-    analysis([
-      {
-        fromUserName: userStore.userInfo.realname,
-        msgTo: chatto.value,
-        msgFrom: myuid.value,
-        msgData: content,
-        fromAvatar: userStore.userInfo.avatar,
-        sendTime: time,
-        sendTimeId: id,
-        msgType: 'text',
-      },
-    ]),
-  )
+  send({ msgData: content, msgType: 'text' })
 }
 
 const sendMsg = (content, type) => {
@@ -329,7 +345,7 @@ const sendMsg = (content, type) => {
     to: {
       avatar: chatObj.value.avatar,
       id: chatObj.value.msgTo,
-      type: 'friend',
+      type: chatObj.value.type,
       username: chatObj.value.username,
     },
   }
@@ -340,7 +356,7 @@ const sendMsg = (content, type) => {
   }
   console.log('sendData======>', sendData)
   let params = {
-    type: 'friend',
+    type: chatObj.value.type,
     msgTo: chatObj.value.msgTo,
     text: content,
     msgType: 'text',
@@ -371,21 +387,65 @@ const handleImage = (type) => {
   run()
   stopWatch = watch(
     () => [loading.value, error.value, data.value],
-    ([loading, err, data], oldValue) => {
-      if (loading == false) {
+    ([loading, err, data]: any, oldValue) => {
+      if (loading === false) {
         if (err) {
-          toast.warning('修改失败')
+          // toast.warning('修改失败')
           uni.hideLoading()
         } else {
-          if (data) {
-            console.log('data::', data)
+          if (data.code === 200) {
+            send({ msgData: data.result.text, msgType: 'image' })
+          } else {
+            toast.warning(data.message)
           }
         }
       }
     },
   )
 }
+const send = ({ msgData, msgType }) => {
+  let time = formatDate(new Date().getTime(), 'yyyy-MM-dd hh:mm:ss')
+  let id = time.replace(/\:/g, '').replace(/\-/g, '').replace(' ', '')
+  //发送
+  paging.value.addChatRecordData(
+    analysis([
+      {
+        fromUserName: userStore.userInfo.realname,
+        msgTo: chatto.value,
+        msgFrom: myuid.value,
+        msgData: msgData,
+        fromAvatar: userStore.userInfo.avatar,
+        sendTime: time,
+        sendTimeId: id,
+        msgType,
+      },
+    ]),
+  )
+}
 init()
+
+const handleNavBack = () => {
+  uni.$emit('chatList:unreadClear', chatItemData)
+  uni.$emit('chatList:reload')
+}
+const handleGoChatSetting = () => {
+  paramsStore.setPageParams('chatSetting', {
+    type: chatObj.value.type,
+    chatto: chatto.value,
+  })
+  router.push({
+    name: 'chatSetting',
+  })
+}
+onMounted(() => {
+  uni.$on('chat:updateTile', (title) => {
+    navTitle.value = title
+  })
+})
+onBeforeUnmount(() => {
+  socket?.closeSocket()
+  uni.$off('chat:updateTile')
+})
 </script>
 
 <style lang="scss" scoped>

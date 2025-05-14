@@ -1,10 +1,14 @@
 <template>
-  <view class="margin" style="overflow: scroll;">
+  <view class="margin"  style="width:100%;height:300px;overflow: scroll;">
+    <!-- #ifdef H5  -->
+    <iframe v-if="iframeSrc" :src="iframeSrc" :style="styleObject"></iframe>
+    <!-- #endif -->
     <!-- #ifdef APP-PLUS  -->
     <iframe v-if="iframeSrc" :src="iframeSrc" :style="styleObject"></iframe>
     <!-- #endif -->
-    <!-- #ifdef H5  -->
-    <web-view v-if="iframeSrc" :src="iframeSrc" :fullscreen="false" style="width:100%;height:300px" :webview-styles="styleObject"></web-view>
+
+    <!-- #ifdef MP-WEIXIN  -->
+    <wd-status-tip image="content" tip="暂不支持" />
     <!-- #endif -->
   </view>
 </template>
@@ -21,11 +25,12 @@ const iframeSrc = computed(() => {
   return props.config?.option?.body?.url;
 });
 
-// 计算属性：生成样式对象
+// 计算属性
 const styleObject = computed(() => {
+  let height = (props.config?.size?.height || 400) + 'px';
   return {
     width: '100%',
-    height: '400px',
+    height: height
   };
-});
+})
 </script>

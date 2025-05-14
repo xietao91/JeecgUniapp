@@ -4,11 +4,15 @@
   style: {
     navigationBarTitleText: '',
     navigationStyle: 'custom',
+    disableScroll: true, // 微信禁止页面滚动
+    'app-plus': {
+      bounce: 'none', // 禁用 iOS 弹性效果
+    },
   },
 }
 </route>
 <template>
-  <PageLayout backRouteName="online" navTitle="online在线表单">
+  <PageLayout backRouteName="online" :navTitle="navTitle">
     <view class="wrap">
       <z-paging
         ref="paging"
@@ -20,10 +24,10 @@
         <template v-for="(item, index) in dataList" :key="item.id">
           <wd-swipe-action>
             <view class="list" @click="handleEdit(item)">
-              <template v-for="(cItem, cIndex) in columns" :key="index">
+              <template v-for="(cItem, cIndex) in columns" :key="cIndex">
                 <view v-if="cIndex < 3" class="box" :style="getBoxStyle">
                   <view class="field ellipsis">{{ cItem['title'] }}</view>
-                  <view class="value text-grey">
+                  <view class="value cu-text-grey">
                     <onlineTableCell
                       :columnsInfo="columnsInfo"
                       :record="item"
@@ -37,7 +41,7 @@
             <template #right>
               <view class="action">
                 <view class="button" @click="handleAction('del', item)">删除</view>
-                <!-- <view class="button" @click="handleAction('view', item)">查看</view> -->
+                <view class="button" v-if="item.bpm_status && item.bpm_status == '1'" @click="handleAction('bpm', item)">提交流程</view>
               </view>
             </template>
           </wd-swipe-action>
@@ -76,6 +80,7 @@ const columnsInfo = ref({})
 const pageNo = ref(1)
 const pageSize = ref(10)
 const pageTotal = ref(1)
+const navTitle = ref('online在线表单')
 let pageParams = paramsStore.getPageParams('onlineCard')?.data ?? {}
 const dataList = ref([])
 const getBoxStyle = computed(() => {
@@ -156,6 +161,22 @@ const handleAction = (val, item) => {
       toast.success('删除成功~')
       paging.value.reload()
     })
+  }else if(val == 'bpm'){
+    const url = '/act/process/extActProcess/startMutilProcess'
+    const param = {
+      flowCode: 'onl_'+pageParams.tableName,
+      id: item.id,
+      formUrl: 'modules/bpm/task/form/OnlineFormDetail',
+      formUrlMobile: 'check/onlineForm/detail',
+    }
+    http.post(url, param).then((res: any) => {
+      if (res.success) {
+        toast.success('流程已发起~')
+        paging.value.reload()
+      }else{
+        toast.warning(res.message)
+      }
+    })
   }
 }
 const queryList = (_pageNo, _pageSize) => {
@@ -188,12 +209,13 @@ const handleEdit = (record) => {
     params: {
       desformCode: pageParams.tableName,
       desformName: pageParams.tableTxt,
-      id: record.id,
+      dataId: record.id,
       backRouteName: 'onlineCard',
     },
   })
 }
 onMounted(() => {
+  navTitle.value = pageParams?.tableTxt ||  'online在线表单';
   // 监听刷新列表事件
   uni.$on('refreshList', () => {
     getData()
@@ -224,7 +246,6 @@ onMounted(() => {
   }
 }
 .action {
-  width: 60px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -237,10 +258,12 @@ onMounted(() => {
     height: 100%;
     color: #fff;
     &:first-child {
+      min-width: 60px;
       background-color: #fa4350;
     }
     &:last-child {
-      // background-color: #f0883a;
+       min-width: 100px;
+       background-color: #f0883a;
     }
   }
 }
